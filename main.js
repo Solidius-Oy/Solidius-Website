@@ -1,5 +1,4 @@
-﻿
-(function () {
+﻿(function () {
     "use strict";
 
     /* ===== Navigation scroll visibility ===== */
@@ -105,19 +104,17 @@
     var lightboxImg = lightbox.querySelector("img");
     var lightboxClose = lightbox.querySelector(".lightbox-close");
 
-    document
-        .querySelectorAll(".tab-image-wrapper")
-        .forEach(function (wrapper) {
-            wrapper.addEventListener("click", function () {
-                var img = wrapper.querySelector("img");
-                if (!img) return;
-                lightboxImg.src = img.src;
-                lightboxImg.alt = img.alt;
-                lightbox.classList.add("open");
-                lightbox.setAttribute("aria-hidden", "false");
-                document.body.style.overflow = "hidden";
-            });
+    document.querySelectorAll(".tab-image-wrapper").forEach(function (wrapper) {
+        wrapper.addEventListener("click", function () {
+            var img = wrapper.querySelector("img");
+            if (!img) return;
+            lightboxImg.src = img.src;
+            lightboxImg.alt = img.alt;
+            lightbox.classList.add("open");
+            lightbox.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
         });
+    });
 
     function closeLightbox() {
         lightbox.classList.remove("open");
@@ -130,8 +127,7 @@
         if (e.target === lightbox) closeLightbox();
     });
     document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && lightbox.classList.contains("open"))
-            closeLightbox();
+        if (e.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
     });
 
     /* ===== Pricing calculator ===== */
@@ -184,10 +180,7 @@
             if (remaining <= 0) break;
             var inTier = Math.min(remaining, TIERS[i].max - TIERS[i].min + 1);
             parts.push(
-                inTier +
-                    " hlö × " +
-                    TIERS[i].rate.toFixed(2).replace(".", ",") +
-                    " €",
+                inTier + " hlö × " + TIERS[i].rate.toFixed(2).replace(".", ",") + " €",
             );
             remaining -= inTier;
         }
@@ -225,22 +218,18 @@
         updateCalc();
     });
 
-    document
-        .getElementById("kioskMinus")
-        .addEventListener("click", function () {
-            if (kioskCount > 0) {
-                kioskCount--;
-                updateCalc();
-            }
-        });
-    document
-        .getElementById("kioskPlus")
-        .addEventListener("click", function () {
-            if (kioskCount < 50) {
-                kioskCount++;
-                updateCalc();
-            }
-        });
+    document.getElementById("kioskMinus").addEventListener("click", function () {
+        if (kioskCount > 0) {
+            kioskCount--;
+            updateCalc();
+        }
+    });
+    document.getElementById("kioskPlus").addEventListener("click", function () {
+        if (kioskCount < 50) {
+            kioskCount++;
+            updateCalc();
+        }
+    });
 
     updateCalc();
 
@@ -261,9 +250,11 @@
         observer.observe(el);
     });
 
-    /* ===== Contact form (mailto) ===== */
+    /* ===== Contact form (Web3Forms) ===== */
     var contactForm = document.getElementById("contactForm");
-    contactForm.addEventListener("submit", function (e) {
+    var submitBtn = contactForm.querySelector("button[type='submit']");
+
+    contactForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
         var name = document.getElementById("contact-name").value.trim();
@@ -272,20 +263,35 @@
 
         if (!name || !email || !message) return;
 
-        var subject = encodeURIComponent("Yhteydenotto: " + name);
-        var body = encodeURIComponent(
-            "Nimi: " +
-                name +
-                "\n" +
-                "Sähköposti: " +
-                email +
-                "\n\n" +
-                "Viesti:\n" +
-                message,
-        );
+        var originalText = submitBtn.textContent;
+        submitBtn.textContent = "Lähetetään...";
+        submitBtn.disabled = true;
 
-        window.location.href =
-            "mailto:info@solidius.fi?subject=" + subject + "&body=" + body;
+        try {
+            var formData = new FormData(contactForm);
+            var response = await fetch("https://api.web3forms.com/submit", {
+                method: "POST",
+                body: formData,
+            });
+            var data = await response.json();
+
+            if (response.ok) {
+                submitBtn.textContent = "Viesti lähetetty!";
+                contactForm.reset();
+                setTimeout(function () {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }, 3000);
+            } else {
+                alert("Virhe: " + (data.message || "Yritä uudelleen."));
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            alert("Verkkovirhe. Tarkista yhteys ja yritä uudelleen.");
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
     });
 
     /* ===== Recalculate hero height on resize ===== */
