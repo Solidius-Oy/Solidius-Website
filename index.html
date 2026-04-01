@@ -3,15 +3,18 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Solidius Shift – Työajanseuranta ja vuorosuunnittelu | Solidius Oy</title>
+        <title>Solidius Oy – Käytännönläheiset ohjelmistot organisaatioille</title>
         <meta
             name="description"
-            content="Solidius Oy kehittää käytännönläheisiä ohjelmistoja organisaatioiden tueksi. Solidius Shift kokoaa työajanhallinnan yhteen paikkaan."
+            content="Solidius Oy kehittää käytännönläheisiä ohjelmistoja organisaatioiden tueksi. Solidius Shift kokoaa työajanseurannan, vuorosuunnittelun ja poissaolohallinnan yhteen paikkaan – alkaen 3,90 €/hlö/kk."
         />
-        <meta property="og:title" content="Solidius Oy - Työkaluja sujuvampaan arkeen" />
+        <meta
+            property="og:title"
+            content="Solidius Oy – Käytännönläheiset ohjelmistot organisaatioille"
+        />
         <meta
             property="og:description"
-            content="Solidius Shift - työajan seuranta, poissaolot, vuorosuunnittelu ja henkilöstöhallinta yhdessä paikassa."
+            content="Solidius Oy kehittää käytännönläheisiä ohjelmistoja organisaatioiden tueksi. Solidius Shift kokoaa työajanseurannan, vuorosuunnittelun ja poissaolohallinnan yhteen paikkaan."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://solidius.fi/" />
@@ -21,21 +24,23 @@
         />
         <meta property="og:image:width" content="512" />
         <meta property="og:image:height" content="512" />
+        <meta property="og:image:alt" content="Solidius Oy -logo" />
         <meta property="og:locale" content="fi_FI" />
         <meta property="og:site_name" content="Solidius Oy" />
         <meta name="twitter:card" content="summary" />
         <meta
             name="twitter:title"
-            content="Solidius Shift – Työajanseuranta ja vuorosuunnittelu"
+            content="Solidius Oy – Käytännönläheiset ohjelmistot organisaatioille"
         />
         <meta
             name="twitter:description"
-            content="Solidius Shift kokoaa työajan seurannan, poissaolot, vuorosuunnittelun ja henkilöstöhallinnan yhteen paikkaan."
+            content="Solidius Oy kehittää käytännönläheisiä ohjelmistoja organisaatioiden tueksi. Solidius Shift kokoaa työajanseurannan, vuorosuunnittelun ja poissaolohallinnan yhteen paikkaan."
         />
         <meta
             name="twitter:image"
             content="https://solidius.fi/img/android-chrome-512x512.png"
         />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://solidius.fi/" />
         <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
         <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png" />
@@ -55,13 +60,38 @@
                 "@context": "https://schema.org",
                 "@graph": [
                     {
+                        "@type": "WebSite",
+                        "@id": "https://solidius.fi/#website",
+                        "url": "https://solidius.fi/",
+                        "name": "Solidius Oy",
+                        "publisher": { "@id": "https://solidius.fi/#organization" },
+                        "inLanguage": "fi-FI"
+                    },
+                    {
+                        "@type": "WebPage",
+                        "@id": "https://solidius.fi/",
+                        "url": "https://solidius.fi/",
+                        "name": "Solidius Oy – Käytännönläheiset ohjelmistot organisaatioille",
+                        "description": "Solidius Oy kehittää käytännönläheisiä ohjelmistoja organisaatioiden tueksi. Solidius Shift kokoaa työajanseurannan, vuorosuunnittelun ja poissaolohallinnan yhteen paikkaan.",
+                        "inLanguage": "fi-FI",
+                        "isPartOf": { "@id": "https://solidius.fi/#website" },
+                        "about": { "@id": "https://solidius.fi/#organization" }
+                    },
+                    {
                         "@type": "Organization",
                         "@id": "https://solidius.fi/#organization",
                         "name": "Solidius Oy",
                         "url": "https://solidius.fi",
+                        "email": "info@solidius.fi",
                         "logo": {
                             "@type": "ImageObject",
                             "url": "https://solidius.fi/img/android-chrome-512x512.png"
+                        },
+                        "contactPoint": {
+                            "@type": "ContactPoint",
+                            "email": "info@solidius.fi",
+                            "contactType": "customer support",
+                            "availableLanguage": "fi"
                         }
                     },
                     {
@@ -71,11 +101,19 @@
                         "operatingSystem": "Web",
                         "url": "https://solidius.fi",
                         "description": "Solidius Shift kokoaa työajan seurannan, poissaolojen hallinnan, vuorosuunnittelun ja esihenkilötyön yhteen selainpohjaiseen järjestelmään.",
+                        "featureList": [
+                            "Työajanseuranta",
+                            "Poissaolohallinta",
+                            "Vuorosuunnittelu",
+                            "Reaaliaikainen tilannekuva",
+                            "Tarkistus ja hyväksyntä",
+                            "Henkilöstöhallinta"
+                        ],
                         "offers": {
                             "@type": "Offer",
                             "priceCurrency": "EUR",
-                            "price": "2.90",
-                            "description": "alkaen 2,90 € / käyttäjä / kk"
+                            "price": "3.90",
+                            "description": "alkaen 3,90 € / käyttäjä / kk"
                         },
                         "publisher": { "@id": "https://solidius.fi/#organization" }
                     }
