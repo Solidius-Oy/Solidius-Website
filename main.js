@@ -277,10 +277,7 @@
         var checkbox = document.getElementById("includeCalc");
         checkbox.checked = true;
         document.getElementById("calcAttachPreview").style.display = "block";
-        document.getElementById("yhteystiedot").scrollIntoView({ behavior: "smooth" });
-        setTimeout(function () {
-            document.getElementById("contact-name").focus();
-        }, 600);
+        document.getElementById("contactForm").scrollIntoView({ behavior: "smooth" });
     });
 
     /* Checkbox toggle */

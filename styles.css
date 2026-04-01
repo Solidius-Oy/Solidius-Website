@@ -988,6 +988,7 @@ input[type="range"].calc-range::-moz-range-thumb {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    scroll-margin-top: var(--nav-height);
 }
 
 .form-group {
