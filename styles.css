@@ -402,6 +402,7 @@ section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    scroll-margin-top: calc(var(--nav-height) + 16px);
 }
 
 .feature-card {
