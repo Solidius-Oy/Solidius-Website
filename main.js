@@ -152,6 +152,9 @@
         document.getElementById("tier-3"),
     ];
 
+    /* Nollaa laskuri sivun latautuessa (selain muistaa sliderin tilan muuten) */
+    empSlider.value = empCount;
+
     function fmt(n) {
         return n.toFixed(2).replace(".", ",").replace(/,00$/, "") + " €";
     }
