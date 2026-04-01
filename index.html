@@ -267,18 +267,29 @@
 
             .hero-chevron {
                 position: absolute;
-                bottom: 40px;
+                bottom: calc(40px + env(safe-area-inset-bottom, 0px));
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                gap: 8px;
+                gap: 10px;
                 cursor: pointer;
-                opacity: 0.5;
-                transition: opacity var(--transition);
             }
 
-            .hero-chevron:hover {
+            .hero-chevron:hover .hero-chevron-arrow {
                 opacity: 0.9;
+            }
+
+            .hero-chevron-hint {
+                font-size: 0.72rem;
+                font-weight: 600;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--color-text-light);
+                opacity: 0;
+                transform: translateY(6px);
+                transition:
+                    opacity 0.8s ease,
+                    transform 0.8s ease;
             }
 
             .hero-chevron-arrow {
@@ -286,7 +297,7 @@
                 height: 28px;
                 border-right: 2px solid var(--color-text-light);
                 border-bottom: 2px solid var(--color-text-light);
-                transform: rotate(45deg);
+                opacity: 0.5;
                 animation: chevron-bounce 2s infinite;
             }
 
@@ -1167,7 +1178,7 @@
                 }
 
                 .hero-chevron {
-                    bottom: 28px;
+                    bottom: calc(max(28px, env(safe-area-inset-bottom, 0px) + 16px));
                 }
             }
             /* ===== Lightbox ===== */
@@ -1325,6 +1336,7 @@
                 tabindex="0"
                 aria-label="Vieritä alas"
             >
+                <span class="hero-chevron-hint" aria-hidden="true">Vieritä alas</span>
                 <div class="hero-chevron-arrow"></div>
             </div>
         </section>
@@ -1983,6 +1995,15 @@
                         scrollToContent();
                     }
                 });
+
+                /* ===== Chevron hint appear ===== */
+                var hint = document.querySelector(".hero-chevron-hint");
+                if (hint) {
+                    setTimeout(function () {
+                        hint.style.opacity = "0.7";
+                        hint.style.transform = "translateY(0)";
+                    }, 2500);
+                }
 
                 /* ===== Mobile menu ===== */
                 var hamburger = document.getElementById("hamburger");
