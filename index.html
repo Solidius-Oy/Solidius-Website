@@ -243,6 +243,7 @@
                 left: 0;
                 width: 100%;
                 height: 100vh;
+                height: 100svh;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -316,6 +317,7 @@
                 position: relative;
                 z-index: 10;
                 margin-top: 100vh;
+                margin-top: 100svh;
             }
 
             .content > section:first-child {
@@ -1178,7 +1180,7 @@
                 }
 
                 .hero-chevron {
-                    bottom: calc(max(28px, env(safe-area-inset-bottom, 0px) + 16px));
+                    bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
                 }
             }
             /* ===== Lightbox ===== */
