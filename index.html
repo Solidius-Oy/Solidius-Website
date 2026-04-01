@@ -704,6 +704,13 @@
                                     10 hlö × 3,90 € = 39 €
                                 </div>
                             </div>
+                            <button
+                                type="button"
+                                class="calc-quote-btn"
+                                id="calcQuoteBtn"
+                            >
+                                Kysy tarjous
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -823,6 +830,15 @@
                                     placeholder="Kerro, miten voimme auttaa..."
                                     required
                                 ></textarea>
+                            </div>
+                            <div class="form-calc-attach" id="calcAttachGroup">
+                                <label class="calc-attach-label">
+                                    <input type="checkbox" id="includeCalc" />
+                                    <span>Liitä laskurin arvio viestiin</span>
+                                </label>
+                                <div class="calc-attach-preview" id="calcAttachPreview">
+                                    <span id="calcSummaryText"></span>
+                                </div>
                             </div>
                             <button type="submit" class="form-submit">
                                 Lähetä viesti

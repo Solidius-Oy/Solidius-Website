@@ -198,6 +198,16 @@
         calcTotalEl.textContent = fmt(total);
         calcBreakdownEl.textContent = buildBreakdown(empCount, kioskCount);
 
+        /* Sync summary text for contact form */
+        var summaryEl = document.getElementById("calcSummaryText");
+        if (summaryEl) {
+            var lines = ["Henkilöt: " + empCount + " hlö"];
+            if (kioskCount > 0) lines.push("Leimauspäätteet: " + kioskCount + " kpl");
+            lines.push("Erittely: " + buildBreakdown(empCount, kioskCount));
+            lines.push("Yhteensä: " + fmt(total) + " / kk (alv 0 %)");
+            summaryEl.textContent = lines.join(" | ");
+        }
+
         var active = activeTierIndex(empCount);
         tierEls.forEach(function (el, i) {
             el.classList.toggle("active", i === active);
@@ -254,6 +264,29 @@
     var contactForm = document.getElementById("contactForm");
     var submitBtn = contactForm.querySelector("button[type='submit']");
 
+    /* Nollaa checkbox sivun latautuessa (selain muistaa tilan muuten) */
+    var includeCalcInit = document.getElementById("includeCalc");
+    includeCalcInit.checked = false;
+    document.getElementById("calcAttachPreview").style.display = "none";
+
+    /* Kysy tarjous -nappi laskurissa */
+    document.getElementById("calcQuoteBtn").addEventListener("click", function () {
+        var checkbox = document.getElementById("includeCalc");
+        checkbox.checked = true;
+        document.getElementById("calcAttachPreview").style.display = "block";
+        document.getElementById("yhteystiedot").scrollIntoView({ behavior: "smooth" });
+        setTimeout(function () {
+            document.getElementById("contact-name").focus();
+        }, 600);
+    });
+
+    /* Checkbox toggle */
+    document.getElementById("includeCalc").addEventListener("change", function () {
+        document.getElementById("calcAttachPreview").style.display = this.checked
+            ? "block"
+            : "none";
+    });
+
     contactForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
@@ -269,6 +302,14 @@
 
         try {
             var formData = new FormData(contactForm);
+            /* Liitä laskuridata vain jos checkbox on päällä */
+            var includeCalc = document.getElementById("includeCalc");
+            if (includeCalc.checked) {
+                formData.append(
+                    "Laskurin_arvio",
+                    document.getElementById("calcSummaryText").textContent,
+                );
+            }
             var response = await fetch("https://api.web3forms.com/submit", {
                 method: "POST",
                 body: formData,

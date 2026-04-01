@@ -16,8 +16,7 @@
     --color-border-dark: #27272a;
     --color-card: #ffffff;
     --color-card-dark: #18181b;
-    --font-sans:
-        "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     --radius: 16px;
     --radius-sm: 10px;
     --radius-xs: 6px;
@@ -226,11 +225,7 @@ section {
     justify-content: center;
     z-index: 0;
     background: var(--color-bg-hero);
-    background: radial-gradient(
-        ellipse at 50% 40%,
-        #151528 0%,
-        var(--color-bg-hero) 65%
-    );
+    background: radial-gradient(ellipse at 50% 40%, #151528 0%, var(--color-bg-hero) 65%);
 }
 
 .hero-logo {
@@ -376,11 +371,7 @@ section {
 
 /* ===== Section: Shift Product ===== */
 .section-shift {
-    background: linear-gradient(
-        160deg,
-        #0f172a 0%,
-        var(--color-bg-dark) 100%
-    );
+    background: linear-gradient(160deg, #0f172a 0%, var(--color-bg-dark) 100%);
     padding: 120px 0;
     color: var(--color-text-light);
 }
@@ -563,11 +554,7 @@ section {
 
 /* ===== Section: Contact ===== */
 .section-pricing {
-    background: linear-gradient(
-        160deg,
-        #0f172a 0%,
-        var(--color-bg-dark) 100%
-    );
+    background: linear-gradient(160deg, #0f172a 0%, var(--color-bg-dark) 100%);
     padding: 120px 0;
     color: var(--color-text-light);
 }
@@ -890,6 +877,32 @@ input[type="range"].calc-range::-moz-range-thumb {
     line-height: 1.7;
 }
 
+.calc-quote-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    color: #fff;
+    background: var(--color-accent);
+    border: none;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition:
+        background var(--transition),
+        transform var(--transition);
+}
+
+.calc-quote-btn:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+}
+
+.calc-quote-btn:active {
+    transform: translateY(0);
+}
+
 /* ===== Section: Contact ===== */
 .section-contact {
     background: var(--color-bg-dark);
@@ -1046,6 +1059,42 @@ input[type="range"].calc-range::-moz-range-thumb {
     font-size: 0.8rem;
     color: #52525b;
     margin-top: -8px;
+}
+
+.form-calc-attach {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-xs);
+    padding: 12px 16px;
+}
+
+.calc-attach-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    user-select: none;
+}
+
+.calc-attach-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-accent);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.calc-attach-preview {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: rgba(58, 82, 209, 0.1);
+    border-radius: var(--radius-xs);
+    font-size: 0.82rem;
+    color: #a1a1aa;
+    line-height: 1.7;
 }
 
 /* ===== Footer ===== */
