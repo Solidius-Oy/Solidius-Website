@@ -1004,6 +1004,11 @@ input[type="range"].calc-range::-moz-range-thumb {
     color: var(--color-text-muted);
 }
 
+.form-optional {
+    font-weight: 400;
+    opacity: 0.6;
+}
+
 .form-group input,
 .form-group textarea {
     font-family: var(--font-sans);

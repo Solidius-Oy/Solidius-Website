@@ -768,7 +768,18 @@
                                 name="subject"
                                 value="Yhteydenotto – solidius.fi"
                             />
-                            <input type="checkbox" name="botcheck" style="display: none" />
+                            <input type="hidden" name="from_name" value="solidius.fi" />
+                            <input
+                                type="hidden"
+                                name="replyto"
+                                id="replytoField"
+                                value=""
+                            />
+                            <input
+                                type="checkbox"
+                                name="botcheck"
+                                style="display: none"
+                            />
                             <div class="form-group">
                                 <label for="contact-name">Nimi</label>
                                 <input
@@ -789,6 +800,21 @@
                                     placeholder="nimi@yritys.fi"
                                     required
                                     autocomplete="email"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label for="contact-phone"
+                                    >Puhelinnumero
+                                    <span class="form-optional"
+                                        >(valinnainen)</span
+                                    ></label
+                                >
+                                <input
+                                    type="tel"
+                                    id="contact-phone"
+                                    name="phone"
+                                    placeholder="+358 40 123 4567"
+                                    autocomplete="tel"
                                 />
                             </div>
                             <div class="form-group">

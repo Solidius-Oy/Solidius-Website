@@ -296,6 +296,9 @@
 
         if (!name || !email || !message) return;
 
+        /* Aseta replyto dynaamisesti ennen lähetystä */
+        document.getElementById("replytoField").value = email;
+
         var originalText = submitBtn.textContent;
         submitBtn.textContent = "Lähetetään...";
         submitBtn.disabled = true;
