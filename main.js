@@ -35,11 +35,12 @@
         var canvas = document.getElementById("heroParticles");
         var ctx = canvas.getContext("2d");
         var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        var PARTICLE_COUNT = 80;
-        var MOUSE_RADIUS = 140;
-        var REPULSION = 4000;
-        var RETURN_SPEED = 0.025;
-        var FRICTION = 0.92;
+        var PARTICLE_COUNT = 180;
+        var MOUSE_RADIUS = 160;
+        var REPULSION = 3500;
+        var DRIFT_SPEED = 0.05;
+        var MAX_SPEED = 0.8;
+        var FRICTION = 0.98;
         var particles = [];
         var mouse = { x: -9999, y: -9999 };
         var animId = null;
@@ -58,28 +59,37 @@
         function createParticles() {
             particles = [];
             for (var i = 0; i < PARTICLE_COUNT; i++) {
-                var x = Math.random() * w;
-                var y = Math.random() * h;
+                var angle = Math.random() * Math.PI * 2;
+                var speed = Math.random() * DRIFT_SPEED + 0.01;
                 particles.push({
-                    x: x,
-                    y: y,
-                    homeX: x,
-                    homeY: y,
-                    vx: 0,
-                    vy: 0,
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
                     size: Math.random() * 1.8 + 0.6,
-                    alpha: Math.random() * 0.4 + 0.15,
+                    alpha: Math.random() * 0.35 + 0.1,
+                    driftPhase: Math.random() * Math.PI * 2,
+                    driftAmpX: Math.random() * 0.008 + 0.003,
+                    driftAmpY: Math.random() * 0.006 + 0.002,
+                    driftFreq: Math.random() * 0.003 + 0.001,
                 });
             }
         }
 
+        var tick = 0;
+
         function draw() {
             ctx.clearRect(0, 0, w, h);
+            tick++;
 
             for (var i = 0; i < particles.length; i++) {
                 var p = particles[i];
 
-                /* Repulsion from cursor */
+                /* Gentle wandering drift (like dust floating in air) */
+                p.vx += Math.sin(tick * p.driftFreq + p.driftPhase) * p.driftAmpX;
+                p.vy += Math.cos(tick * p.driftFreq * 0.8 + p.driftPhase) * p.driftAmpY;
+
+                /* Repulsion from cursor — soft push */
                 var dx = p.x - mouse.x;
                 var dy = p.y - mouse.y;
                 var distSq = dx * dx + dy * dy;
@@ -91,20 +101,30 @@
                     p.vy += (dy / dist) * force;
                 }
 
-                /* Spring back to home */
-                p.vx += (p.homeX - p.x) * RETURN_SPEED;
-                p.vy += (p.homeY - p.y) * RETURN_SPEED;
-
-                /* Friction */
+                /* Friction — keeps speeds from accumulating */
                 p.vx *= FRICTION;
                 p.vy *= FRICTION;
+
+                /* Clamp max speed so particles stay dust-like */
+                var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                if (speed > MAX_SPEED) {
+                    p.vx = (p.vx / speed) * MAX_SPEED;
+                    p.vy = (p.vy / speed) * MAX_SPEED;
+                    speed = MAX_SPEED;
+                }
 
                 p.x += p.vx;
                 p.y += p.vy;
 
+                /* Wrap around edges with margin */
+                var margin = 20;
+                if (p.x < -margin) p.x = w + margin;
+                else if (p.x > w + margin) p.x = -margin;
+                if (p.y < -margin) p.y = h + margin;
+                else if (p.y > h + margin) p.y = -margin;
+
                 /* Glow intensity based on velocity */
-                var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-                var glow = Math.min(speed * 0.15, 0.6);
+                var glow = Math.min(speed * 0.12, 0.5);
                 var alpha = p.alpha + glow;
 
                 ctx.beginPath();
