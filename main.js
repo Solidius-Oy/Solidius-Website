@@ -55,19 +55,19 @@
 
         /* Yhdistysviivat */
         var LINE_MAX_DIST = 100; /* Max etäisyys viivoille (px) */
-        var LINE_OPACITY = 0.18; /* Viivojen kirkkaus (0–1) */
+        var LINE_OPACITY = 0.08; /* Viivojen kirkkaus (0–1) */
         var LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
 
         /* Liike */
-        var MOUSE_RADIUS = 160; /* Kursorin vaikutusalue (px) */
-        var REPULSION = 3500; /* Kursorin työntövoima */
+        var MOUSE_RADIUS = 180; /* Kursorin vaikutusalue (px) */
+        var REPULSION = 3000; /* Kursorin työntövoima */
         var DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
         var MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
         var FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
-        var LOGO_REPULSION = 2.0; /* Logon hylkimisvoima (0–2) */
-        var LOGO_MARGIN = 55; /* Tyhjä väli logon ympärillä (px) */
-        var LOGO_ATTRACT = 0.012; /* Logon vetovoima kaukaa (0–0.1) */
-        var LOGO_ATTRACT_RADIUS = 350; /* Etäisyys josta vetovoima alkaa (px) */
+        var LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
+        var LOGO_MARGIN = 40; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
+        var LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
+        var LOGO_ATTRACT_RADIUS = 350; /* Vetovoiman kantama (px) — laaja kenttä */
 
         /* ─── /ASETUKSET ─── */
 
@@ -84,6 +84,8 @@
             logoOffY = 0,
             logoW = 0,
             logoH = 0;
+        var isoCX = 0,
+            isoCY = 0; /* Isotype center in hero coordinates */
 
         function buildLogoMask() {
             var logoEl = hero.querySelector(".hero-logo");
@@ -102,17 +104,42 @@
             maskCanvas.height = logoH;
             maskCtx.clearRect(0, 0, logoW, logoH);
 
-            /* Serialize SVG and draw to offscreen canvas */
+            /* Clone SVG but keep only the isotype (the <g> with matrix transform), remove text path */
             var svgClone = logoEl.cloneNode(true);
             svgClone.setAttribute("width", logoW);
             svgClone.setAttribute("height", logoH);
             svgClone.style.color = "white";
             svgClone.setAttribute("fill", "white");
+            var innerG = svgClone.querySelector("g");
+            if (innerG) {
+                /* Remove direct <path> children (the text), keep nested <g> (the isotype) */
+                var directPaths = innerG.querySelectorAll(":scope > path");
+                for (var i = 0; i < directPaths.length; i++) {
+                    directPaths[i].remove();
+                }
+            }
             var svgStr = new XMLSerializer().serializeToString(svgClone);
             var img = new Image();
             img.onload = function () {
                 maskCtx.drawImage(img, 0, 0, logoW, logoH);
                 maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+                /* Compute isotype centroid from mask pixels */
+                var sumX = 0,
+                    sumY = 0,
+                    count = 0;
+                for (var py = 0; py < logoH; py++) {
+                    for (var px = 0; px < logoW; px++) {
+                        if (maskData[(py * logoW + px) * 4 + 3] > 128) {
+                            sumX += px;
+                            sumY += py;
+                            count++;
+                        }
+                    }
+                }
+                if (count > 0) {
+                    isoCX = logoOffX + sumX / count;
+                    isoCY = logoOffY + sumY / count;
+                }
             };
             img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
         }
@@ -185,11 +212,9 @@
                     p.vy += (dy / dist) * force;
                 }
 
-                /* Repulsion from logo shape + margin zone */
-                var logoCX = logoOffX + logoW * 0.5;
-                var logoCY = logoOffY + logoH * 0.5;
-                var ldx = p.x - logoCX;
-                var ldy = p.y - logoCY;
+                /* Repulsion from isotype shape + margin zone */
+                var ldx = p.x - isoCX;
+                var ldy = p.y - isoCY;
                 var lDist = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
                 var ndx = ldx / lDist;
                 var ndy = ldy / lDist;
