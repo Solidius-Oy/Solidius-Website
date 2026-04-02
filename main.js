@@ -210,13 +210,23 @@
 
         resize();
         createParticles();
+        buildLogoMask();
         animId = requestAnimationFrame(draw);
 
         window.addEventListener(
             "resize",
             function () {
+                var oldW = w;
+                var oldH = h;
                 resize();
-                createParticles();
+                /* Scale particle positions to new dimensions instead of resetting */
+                var scaleX = w / (oldW || 1);
+                var scaleY = h / (oldH || 1);
+                for (var i = 0; i < particles.length; i++) {
+                    particles[i].x *= scaleX;
+                    particles[i].y *= scaleY;
+                }
+                buildLogoMask();
             },
             { passive: true },
         );
