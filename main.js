@@ -44,7 +44,10 @@
         var COLOR_B = 255;
 
         /* Partikkelien kirkkaus & koko */
-        var PARTICLE_COUNT = 280; /* Montako partikkelia */
+        var PARTICLE_DENSITY = 0.00015; /* Partikkeleita per neliöpikseli */
+        var PARTICLE_COUNT = Math.round(
+            Math.max(30, Math.min(400, window.innerWidth * window.innerHeight * PARTICLE_DENSITY)),
+        );
         var SIZE_MIN = 0.6; /* Pienin partikkeli (px) */
         var SIZE_MAX = 2.4; /* Suurin partikkeli (px) */
         var ALPHA_MIN = 0.1; /* Himmeimmät partikkelit (0–1) */
