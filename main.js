@@ -182,9 +182,7 @@
         for (var i = 0; i < TIERS.length; i++) {
             if (remaining <= 0) break;
             var inTier = Math.min(remaining, TIERS[i].max - TIERS[i].min + 1);
-            parts.push(
-                inTier + " hlö × " + TIERS[i].rate.toFixed(2).replace(".", ",") + " €",
-            );
+            parts.push(inTier + " hlö × " + TIERS[i].rate.toFixed(2).replace(".", ",") + " €");
             remaining -= inTier;
         }
         if (kiosks > 0) parts.push(kiosks + " pääte × " + KIOSK_PRICE + " €");
@@ -290,18 +288,55 @@
     contactForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
+        /* Estä tuplalähetys */
+        if (submitBtn.disabled) return;
+        submitBtn.disabled = true;
+
         var name = document.getElementById("contact-name").value.trim();
         var email = document.getElementById("contact-email").value.trim();
         var message = document.getElementById("contact-message").value.trim();
+        var nameError = document.getElementById("nameError");
+        var emailError = document.getElementById("emailError");
+        var messageError = document.getElementById("messageError");
+        var formMessage = document.getElementById("formMessage");
 
-        if (!name || !email || !message) return;
+        /* Piilota aiemmat viestit */
+        nameError.textContent = "";
+        emailError.textContent = "";
+        messageError.textContent = "";
+        formMessage.className = "form-message";
+        formMessage.style.display = "none";
+
+        /* Validoi kaikki kentät kerralla */
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        var valid = true;
+
+        if (!name) {
+            nameError.textContent = "Syötä nimesi.";
+            valid = false;
+        }
+        if (!email) {
+            emailError.textContent = "Syötä sähköpostiosoitteesi.";
+            valid = false;
+        } else if (!emailRegex.test(email)) {
+            emailError.textContent = "Syötä kelvollinen sähköpostiosoite.";
+            valid = false;
+        }
+        if (!message) {
+            messageError.textContent = "Kirjoita viesti.";
+            valid = false;
+        }
+
+        if (!valid) {
+            submitBtn.disabled = false;
+            return;
+        }
 
         /* Aseta replyto dynaamisesti ennen lähetystä */
         document.getElementById("replytoField").value = email;
 
         var originalText = submitBtn.textContent;
         submitBtn.textContent = "Lähetetään...";
-        submitBtn.disabled = true;
 
         try {
             var formData = new FormData(contactForm);
@@ -320,22 +355,43 @@
             var data = await response.json();
 
             if (response.ok) {
+                formMessage.textContent = "Kiitos viestistäsi! Vastaamme pian.";
+                formMessage.className = "form-message form-message--success";
+                formMessage.style.display = "block";
                 submitBtn.textContent = "Viesti lähetetty!";
+                /* Nollaa lomake ja laskuriliitos */
                 contactForm.reset();
+                includeCalc.checked = false;
+                document.getElementById("calcAttachPreview").style.display = "none";
                 setTimeout(function () {
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }, 3000);
             } else {
-                alert("Virhe: " + (data.message || "Yritä uudelleen."));
+                formMessage.textContent = "Virhe: " + (data.message || "Yritä uudelleen.");
+                formMessage.className = "form-message form-message--error";
+                formMessage.style.display = "block";
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
             }
         } catch (error) {
-            alert("Verkkovirhe. Tarkista yhteys ja yritä uudelleen.");
+            formMessage.textContent = "Verkkovirhe. Tarkista yhteys ja yritä uudelleen.";
+            formMessage.className = "form-message form-message--error";
+            formMessage.style.display = "block";
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
         }
+    });
+
+    /* Tyhjennä kentän virhe kun käyttäjä alkaa kirjoittaa */
+    document.getElementById("contact-name").addEventListener("input", function () {
+        document.getElementById("nameError").textContent = "";
+    });
+    document.getElementById("contact-email").addEventListener("input", function () {
+        document.getElementById("emailError").textContent = "";
+    });
+    document.getElementById("contact-message").addEventListener("input", function () {
+        document.getElementById("messageError").textContent = "";
     });
 
     /* ===== Recalculate hero height on resize ===== */
