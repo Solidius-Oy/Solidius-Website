@@ -35,16 +35,43 @@
         var canvas = document.getElementById("heroParticles");
         var ctx = canvas.getContext("2d");
         var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        var PARTICLE_COUNT = 180;
-        var MOUSE_RADIUS = 160;
-        var REPULSION = 3500;
-        var DRIFT_SPEED = 0.05;
-        var MAX_SPEED = 0.8;
-        var FRICTION = 0.98;
+
+        /* ─── SÄÄDETTÄVÄT ASETUKSET ─── */
+
+        /* Partikkelien väri (R, G, B) */
+        var COLOR_R = 108;
+        var COLOR_G = 135;
+        var COLOR_B = 255;
+
+        /* Partikkelien kirkkaus & koko */
+        var PARTICLE_COUNT = 280; /* Montako partikkelia */
+        var SIZE_MIN = 0.6; /* Pienin partikkeli (px) */
+        var SIZE_MAX = 2.4; /* Suurin partikkeli (px) */
+        var ALPHA_MIN = 0.1; /* Himmeimmät partikkelit (0–1) */
+        var ALPHA_MAX = 1.0; /* Kirkkaimmat partikkelit (0–1) */
+
+        /* Yhdistysviivat */
+        var LINE_MAX_DIST = 100; /* Max etäisyys viivoille (px) */
+        var LINE_OPACITY = 0.08; /* Viivojen kirkkaus (0–1) */
+        var LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
+
+        /* Liike */
+        var MOUSE_RADIUS = 160; /* Kursorin vaikutusalue (px) */
+        var REPULSION = 3500; /* Kursorin työntövoima */
+        var DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
+        var MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
+        var FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
+
+        /* ─── /ASETUKSET ─── */
+
         var particles = [];
         var mouse = { x: -9999, y: -9999 };
         var animId = null;
         var w, h;
+
+        function rgba(a) {
+            return "rgba(" + COLOR_R + ", " + COLOR_G + ", " + COLOR_B + ", " + a + ")";
+        }
 
         function resize() {
             w = hero.offsetWidth;
@@ -66,8 +93,8 @@
                     y: Math.random() * h,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
-                    size: Math.random() * 1.8 + 0.6,
-                    alpha: Math.random() * 0.35 + 0.1,
+                    size: Math.random() * (SIZE_MAX - SIZE_MIN) + SIZE_MIN,
+                    alpha: Math.random() * (ALPHA_MAX - ALPHA_MIN) + ALPHA_MIN,
                     driftPhase: Math.random() * Math.PI * 2,
                     driftAmpX: Math.random() * 0.008 + 0.003,
                     driftAmpY: Math.random() * 0.006 + 0.002,
@@ -123,22 +150,11 @@
                 if (p.y < -margin) p.y = h + margin;
                 else if (p.y > h + margin) p.y = -margin;
 
-                /* Glow intensity based on velocity */
-                var glow = Math.min(speed * 0.12, 0.5);
-                var alpha = p.alpha + glow;
-
+                /* Draw particle */
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(108, 135, 255, " + alpha + ")";
+                ctx.fillStyle = rgba(p.alpha);
                 ctx.fill();
-
-                /* Extra glow ring when moving fast */
-                if (speed > 1.5) {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
-                    ctx.fillStyle = "rgba(108, 135, 255, " + glow * 0.3 + ")";
-                    ctx.fill();
-                }
             }
 
             /* Faint connection lines between nearby particles */
@@ -147,12 +163,12 @@
                     var dx = particles[i].x - particles[j].x;
                     var dy = particles[i].y - particles[j].y;
                     var dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
+                    if (dist < LINE_MAX_DIST) {
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = "rgba(108, 135, 255, " + (1 - dist / 100) * 0.08 + ")";
-                        ctx.lineWidth = 0.5;
+                        ctx.strokeStyle = rgba((1 - dist / LINE_MAX_DIST) * LINE_OPACITY);
+                        ctx.lineWidth = LINE_WIDTH;
                         ctx.stroke();
                     }
                 }
