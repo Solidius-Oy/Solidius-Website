@@ -2,9 +2,9 @@
     "use strict";
 
     /* ===== Navigation scroll visibility ===== */
-    var nav = document.getElementById("nav");
-    var hero = document.getElementById("hero");
-    var heroHeight = window.innerHeight;
+    const nav = document.getElementById("nav");
+    const hero = document.getElementById("hero");
+    let heroHeight = window.innerHeight;
 
     function handleNavVisibility() {
         if (window.scrollY > heroHeight * 0.75) {
@@ -16,8 +16,8 @@
 
     /* ===== Hero fade on scroll ===== */
     function handleHeroFade() {
-        var scrollY = window.scrollY;
-        var opacity = Math.max(0, 1 - scrollY / (heroHeight * 0.6));
+        const scrollY = window.scrollY;
+        const opacity = Math.max(0, 1 - scrollY / (heroHeight * 0.6));
         hero.style.opacity = opacity;
     }
 
@@ -32,86 +32,86 @@
 
     /* ===== Particle Field ===== */
     (function initParticles() {
-        var canvas = document.getElementById("heroParticles");
-        var ctx = canvas.getContext("2d");
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const canvas = document.getElementById("heroParticles");
+        const ctx = canvas.getContext("2d");
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
         /* ─── SÄÄDETTÄVÄT ASETUKSET ─── */
 
         /* Partikkelien väri (R, G, B) */
-        var COLOR_R = 108;
-        var COLOR_G = 135;
-        var COLOR_B = 255;
+        const COLOR_R = 108;
+        const COLOR_G = 135;
+        const COLOR_B = 255;
 
         /* Partikkelien kirkkaus & koko */
-        var PARTICLE_DENSITY = 0.00015; /* Partikkeleita per neliöpikseli */
-        var PARTICLE_COUNT = Math.round(
+        const PARTICLE_DENSITY = 0.00015; /* Partikkeleita per neliöpikseli */
+        const PARTICLE_COUNT = Math.round(
             Math.max(30, Math.min(400, window.innerWidth * window.innerHeight * PARTICLE_DENSITY)),
         );
-        var SIZE_MIN = 0.6; /* Pienin partikkeli (px) */
-        var SIZE_MAX = 2.4; /* Suurin partikkeli (px) */
-        var ALPHA_MIN = 0.1; /* Himmeimmät partikkelit (0–1) */
-        var ALPHA_MAX = 1.0; /* Kirkkaimmat partikkelit (0–1) */
+        const SIZE_MIN = 0.6; /* Pienin partikkeli (px) */
+        const SIZE_MAX = 2.4; /* Suurin partikkeli (px) */
+        const ALPHA_MIN = 0.1; /* Himmeimmät partikkelit (0–1) */
+        const ALPHA_MAX = 1.0; /* Kirkkaimmat partikkelit (0–1) */
 
         /* Yhdistysviivat */
-        var LINE_MAX_DIST = 100; /* Max etäisyys viivoille (px) */
-        var LINE_OPACITY = 0.08; /* Viivojen kirkkaus (0–1) */
-        var LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
+        const LINE_MAX_DIST = 100; /* Max etäisyys viivoille (px) */
+        const LINE_OPACITY = 0.08; /* Viivojen kirkkaus (0–1) */
+        const LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
 
         /* Liike */
-        var MOUSE_RADIUS_FRAC = 0.05; /* Kursorin vaikutusalue (osuus näytön lävistäjästä) */
-        var REPULSION = 3000; /* Kursorin työntövoima */
-        var DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
-        var MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
-        var FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
-        var LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
-        var LOGO_MARGIN = 25; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
-        var LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
-        var LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
+        const MOUSE_RADIUS_FRAC = 0.05; /* Kursorin vaikutusalue (osuus näytön lävistäjästä) */
+        const REPULSION = 3000; /* Kursorin työntövoima */
+        const DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
+        const MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
+        const FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
+        const LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
+        const LOGO_MARGIN = 25; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
+        const LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
+        const LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
 
         /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
-        var MOUSE_RADIUS = 180;
-        var LOGO_ATTRACT_RADIUS = 50;
+        let MOUSE_RADIUS = 180;
+        let LOGO_ATTRACT_RADIUS = 50;
 
         /* ─── /ASETUKSET ─── */
 
-        var particles = [];
-        var mouse = { x: -9999, y: -9999 };
-        var animId = null;
-        var w, h;
+        let particles = [];
+        const mouse = { x: -9999, y: -9999 };
+        let animId = null;
+        let w, h;
 
         /* Logo collision mask */
-        var maskCanvas = document.createElement("canvas");
-        var maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
-        var maskData = null;
-        var logoOffX = 0,
+        const maskCanvas = document.createElement("canvas");
+        const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
+        let maskData = null;
+        let logoOffX = 0,
             logoOffY = 0,
             logoW = 0,
             logoH = 0;
-        var isoCX = 0,
+        let isoCX = 0,
             isoCY = 0; /* Isotype center in hero coordinates */
 
         function buildLogoMask() {
-            var logoEl = hero.querySelector(".hero-logo");
+            const logoEl = hero.querySelector(".hero-logo");
             if (!logoEl) return;
 
             /* Find the isotype <g> (the one with the matrix transform) */
-            var isoG = logoEl.querySelector("g > g");
+            const isoG = logoEl.querySelector("g > g");
             if (!isoG) return;
 
-            var heroRect = hero.getBoundingClientRect();
-            var isoRect = isoG.getBoundingClientRect();
+            const heroRect = hero.getBoundingClientRect();
+            const isoRect = isoG.getBoundingClientRect();
 
             /* Isotype bounds relative to hero */
-            var ix = isoRect.left - heroRect.left;
-            var iy = isoRect.top - heroRect.top;
-            var iw = isoRect.width;
-            var ih = isoRect.height;
+            const ix = isoRect.left - heroRect.left;
+            const iy = isoRect.top - heroRect.top;
+            const iw = isoRect.width;
+            const ih = isoRect.height;
 
             if (iw === 0 || ih === 0) return;
 
             /* Use the full logo area for the mask canvas */
-            var logoRect2 = logoEl.getBoundingClientRect();
+            const logoRect2 = logoEl.getBoundingClientRect();
             logoOffX = logoRect2.left - heroRect.left;
             logoOffY = logoRect2.top - heroRect.top;
             logoW = Math.round(logoRect2.width);
@@ -122,9 +122,9 @@
             maskCtx.clearRect(0, 0, logoW, logoH);
 
             /* Draw a rounded rectangle that covers the isotype shape */
-            var rx = ix - logoOffX;
-            var ry = iy - logoOffY;
-            var cornerRadius = Math.min(iw, ih) * 0.22;
+            const rx = ix - logoOffX;
+            const ry = iy - logoOffY;
+            const cornerRadius = Math.min(iw, ih) * 0.22;
 
             maskCtx.beginPath();
             maskCtx.roundRect(rx, ry, iw, ih, cornerRadius);
@@ -138,8 +138,8 @@
 
         function isInsideLogo(px, py) {
             if (!maskData) return false;
-            var lx = Math.round(px - logoOffX);
-            var ly = Math.round(py - logoOffY);
+            const lx = Math.round(px - logoOffX);
+            const ly = Math.round(py - logoOffY);
             if (lx < 0 || ly < 0 || lx >= logoW || ly >= logoH) return false;
             /* Check alpha channel of the mask pixel */
             return maskData[(ly * logoW + lx) * 4 + 3] > 128;
@@ -159,16 +159,16 @@
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
             /* Skaalaa etäisyysparametrit näytön lävistäjän mukaan */
-            var diag = Math.sqrt(w * w + h * h);
+            const diag = Math.sqrt(w * w + h * h);
             MOUSE_RADIUS = Math.round(diag * MOUSE_RADIUS_FRAC);
             LOGO_ATTRACT_RADIUS = Math.round(diag * LOGO_ATTRACT_RADIUS_FRAC);
         }
 
         function createParticles() {
             particles = [];
-            for (var i = 0; i < PARTICLE_COUNT; i++) {
-                var angle = Math.random() * Math.PI * 2;
-                var speed = Math.random() * DRIFT_SPEED + 0.01;
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * DRIFT_SPEED + 0.01;
                 particles.push({
                     x: Math.random() * w,
                     y: Math.random() * h,
@@ -184,37 +184,37 @@
             }
         }
 
-        var tick = 0;
+        let tick = 0;
 
         function draw() {
             ctx.clearRect(0, 0, w, h);
             tick++;
 
-            for (var i = 0; i < particles.length; i++) {
-                var p = particles[i];
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
 
                 /* Gentle wandering drift (like dust floating in air) */
                 p.vx += Math.sin(tick * p.driftFreq + p.driftPhase) * p.driftAmpX;
                 p.vy += Math.cos(tick * p.driftFreq * 0.8 + p.driftPhase) * p.driftAmpY;
 
                 /* Repulsion from cursor — soft push */
-                var dx = p.x - mouse.x;
-                var dy = p.y - mouse.y;
-                var distSq = dx * dx + dy * dy;
-                var dist = Math.sqrt(distSq);
+                const dx = p.x - mouse.x;
+                const dy = p.y - mouse.y;
+                const distSq = dx * dx + dy * dy;
+                const dist = Math.sqrt(distSq);
 
                 if (dist < MOUSE_RADIUS && dist > 0) {
-                    var force = REPULSION / distSq;
+                    const force = REPULSION / distSq;
                     p.vx += (dx / dist) * force;
                     p.vy += (dy / dist) * force;
                 }
 
                 /* Repulsion from isotype shape + margin zone */
-                var ldx = p.x - isoCX;
-                var ldy = p.y - isoCY;
-                var lDist = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
-                var ndx = ldx / lDist;
-                var ndy = ldy / lDist;
+                const ldx = p.x - isoCX;
+                const ldy = p.y - isoCY;
+                const lDist = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
+                const ndx = ldx / lDist;
+                const ndy = ldy / lDist;
 
                 if (isInsideLogo(p.x, p.y)) {
                     /* Inside logo — full push out */
@@ -222,19 +222,19 @@
                     p.vy += ndy * LOGO_REPULSION;
                 } else if (LOGO_MARGIN > 0) {
                     /* Check if within margin zone by sampling toward logo center */
-                    var testX = p.x - ndx * LOGO_MARGIN;
-                    var testY = p.y - ndy * LOGO_MARGIN;
+                    const testX = p.x - ndx * LOGO_MARGIN;
+                    const testY = p.y - ndy * LOGO_MARGIN;
                     if (isInsideLogo(testX, testY)) {
                         /* Estimate how deep into the margin we are */
-                        var edgeDist = 0;
-                        for (var s = 1; s <= LOGO_MARGIN; s++) {
+                        let edgeDist = 0;
+                        for (let s = 1; s <= LOGO_MARGIN; s++) {
                             if (isInsideLogo(p.x - ndx * s, p.y - ndy * s)) {
                                 edgeDist = LOGO_MARGIN - s;
                                 break;
                             }
                         }
-                        var fade = edgeDist / LOGO_MARGIN;
-                        var force = LOGO_REPULSION * fade * fade;
+                        const fade = edgeDist / LOGO_MARGIN;
+                        const force = LOGO_REPULSION * fade * fade;
                         p.vx += ndx * force;
                         p.vy += ndy * force;
                     }
@@ -242,7 +242,7 @@
 
                 /* Gentle gravity pull toward logo from distance */
                 if (!isInsideLogo(p.x, p.y) && lDist > LOGO_MARGIN && lDist < LOGO_ATTRACT_RADIUS) {
-                    var attractFade = 1 - lDist / LOGO_ATTRACT_RADIUS;
+                    const attractFade = 1 - lDist / LOGO_ATTRACT_RADIUS;
                     p.vx -= ndx * LOGO_ATTRACT * attractFade;
                     p.vy -= ndy * LOGO_ATTRACT * attractFade;
                 }
@@ -252,7 +252,7 @@
                 p.vy *= FRICTION;
 
                 /* Clamp max speed so particles stay dust-like */
-                var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                let speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
                 if (speed > MAX_SPEED) {
                     p.vx = (p.vx / speed) * MAX_SPEED;
                     p.vy = (p.vy / speed) * MAX_SPEED;
@@ -263,7 +263,7 @@
                 p.y += p.vy;
 
                 /* Wrap around edges with margin */
-                var margin = 20;
+                const margin = 20;
                 if (p.x < -margin) p.x = w + margin;
                 else if (p.x > w + margin) p.x = -margin;
                 if (p.y < -margin) p.y = h + margin;
@@ -277,11 +277,11 @@
             }
 
             /* Faint connection lines between nearby particles */
-            for (var i = 0; i < particles.length; i++) {
-                for (var j = i + 1; j < particles.length; j++) {
-                    var dx = particles[i].x - particles[j].x;
-                    var dy = particles[i].y - particles[j].y;
-                    var dist = Math.sqrt(dx * dx + dy * dy);
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < LINE_MAX_DIST) {
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
@@ -299,7 +299,7 @@
         hero.addEventListener(
             "mousemove",
             function (e) {
-                var rect = hero.getBoundingClientRect();
+                const rect = hero.getBoundingClientRect();
                 mouse.x = e.clientX - rect.left;
                 mouse.y = e.clientY - rect.top;
             },
@@ -312,8 +312,8 @@
         });
 
         /* Pause when hero is not visible or tab is hidden */
-        var heroVisible = true;
-        var tabVisible = true;
+        let heroVisible = true;
+        let tabVisible = true;
 
         function updateAnimLoop() {
             if (heroVisible && tabVisible) {
@@ -326,7 +326,7 @@
             }
         }
 
-        var particleObserver = new IntersectionObserver(
+        const particleObserver = new IntersectionObserver(
             function (entries) {
                 heroVisible = entries[0].isIntersecting;
                 updateAnimLoop();
@@ -348,13 +348,13 @@
         window.addEventListener(
             "resize",
             function () {
-                var oldW = w;
-                var oldH = h;
+                const oldW = w;
+                const oldH = h;
                 resize();
                 /* Scale particle positions to new dimensions instead of resetting */
-                var scaleX = w / (oldW || 1);
-                var scaleY = h / (oldH || 1);
-                for (var i = 0; i < particles.length; i++) {
+                const scaleX = w / (oldW || 1);
+                const scaleY = h / (oldH || 1);
+                for (let i = 0; i < particles.length; i++) {
                     particles[i].x *= scaleX;
                     particles[i].y *= scaleY;
                 }
@@ -365,9 +365,9 @@
     })();
 
     /* ===== Chevron click ===== */
-    var chevron = document.getElementById("heroChevron");
+    const chevron = document.getElementById("heroChevron");
     function scrollToContent() {
-        var target = document.getElementById("tietoa");
+        const target = document.getElementById("tietoa");
         if (target) target.scrollIntoView({ behavior: "smooth" });
     }
     chevron.addEventListener("click", scrollToContent);
@@ -379,7 +379,7 @@
     });
 
     /* ===== Chevron hint appear ===== */
-    var hint = document.querySelector(".hero-chevron-hint");
+    const hint = document.querySelector(".hero-chevron-hint");
     if (hint) {
         setTimeout(function () {
             hint.style.opacity = "0.7";
@@ -388,9 +388,9 @@
     }
 
     /* ===== Mobile menu ===== */
-    var hamburger = document.getElementById("hamburger");
-    var mobileMenu = document.getElementById("mobileMenu");
-    var menuOpen = false;
+    const hamburger = document.getElementById("hamburger");
+    const mobileMenu = document.getElementById("mobileMenu");
+    let menuOpen = false;
 
     function toggleMenu() {
         menuOpen = !menuOpen;
@@ -410,14 +410,14 @@
     });
 
     /* ===== Tabs (crossfade) ===== */
-    var tabButtons = document.querySelectorAll(".tab-btn");
-    var tabPanels = document.querySelectorAll(".tab-panel");
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabPanels = document.querySelectorAll(".tab-panel");
 
     tabButtons.forEach(function (btn) {
         btn.addEventListener("click", function () {
-            var tabId = btn.getAttribute("data-tab");
-            var targetPanel = document.getElementById("panel-" + tabId);
-            var currentActive = document.querySelector(".tab-panel.active");
+            const tabId = btn.getAttribute("data-tab");
+            const targetPanel = document.getElementById("panel-" + tabId);
+            const currentActive = document.querySelector(".tab-panel.active");
 
             if (targetPanel === currentActive) return;
 
@@ -434,13 +434,13 @@
     });
 
     /* ===== Lightbox ===== */
-    var lightbox = document.getElementById("lightbox");
-    var lightboxImg = lightbox.querySelector("img");
-    var lightboxClose = lightbox.querySelector(".lightbox-close");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = lightbox.querySelector("img");
+    const lightboxClose = lightbox.querySelector(".lightbox-close");
 
     document.querySelectorAll(".tab-image-wrapper").forEach(function (wrapper) {
         wrapper.addEventListener("click", function () {
-            var img = wrapper.querySelector("img");
+            const img = wrapper.querySelector("img");
             if (!img) return;
             lightboxImg.src = img.src;
             lightboxImg.alt = img.alt;
@@ -465,22 +465,22 @@
     });
 
     /* ===== Pricing calculator ===== */
-    var TIERS = [
+    const TIERS = [
         { min: 1, max: 20, rate: 3.9 },
         { min: 21, max: 75, rate: 2.9 },
         { min: 76, max: Infinity, rate: 1.9 },
     ];
-    var MIN_FEE = 29;
-    var KIOSK_PRICE = 35;
-    var empCount = 10;
-    var kioskCount = 0;
+    const MIN_FEE = 29;
+    const KIOSK_PRICE = 35;
+    let empCount = 10;
+    let kioskCount = 0;
 
-    var empSlider = document.getElementById("empSlider");
-    var empDisplay = document.getElementById("empDisplay");
-    var kioskCountEl = document.getElementById("kioskCount");
-    var calcTotalEl = document.getElementById("calcTotal");
-    var calcBreakdownEl = document.getElementById("calcBreakdown");
-    var tierEls = [
+    const empSlider = document.getElementById("empSlider");
+    const empDisplay = document.getElementById("empDisplay");
+    const kioskCountEl = document.getElementById("kioskCount");
+    const calcTotalEl = document.getElementById("calcTotal");
+    const calcBreakdownEl = document.getElementById("calcBreakdown");
+    const tierEls = [
         document.getElementById("tier-1"),
         document.getElementById("tier-2"),
         document.getElementById("tier-3"),
@@ -494,10 +494,10 @@
     }
 
     function calcEmployeeCost(n) {
-        var cost = 0;
-        for (var i = 0; i < TIERS.length; i++) {
+        let cost = 0;
+        for (let i = 0; i < TIERS.length; i++) {
             if (n <= 0) break;
-            var inTier = Math.min(n, TIERS[i].max - TIERS[i].min + 1);
+            const inTier = Math.min(n, TIERS[i].max - TIERS[i].min + 1);
             cost += inTier * TIERS[i].rate;
             n -= inTier;
         }
@@ -511,11 +511,11 @@
     }
 
     function buildBreakdown(n, kiosks) {
-        var parts = [];
-        var remaining = n;
-        for (var i = 0; i < TIERS.length; i++) {
+        const parts = [];
+        let remaining = n;
+        for (let i = 0; i < TIERS.length; i++) {
             if (remaining <= 0) break;
-            var inTier = Math.min(remaining, TIERS[i].max - TIERS[i].min + 1);
+            const inTier = Math.min(remaining, TIERS[i].max - TIERS[i].min + 1);
             parts.push(inTier + " hlö × " + TIERS[i].rate.toFixed(2).replace(".", ",") + " €");
             remaining -= inTier;
         }
@@ -527,29 +527,29 @@
         empDisplay.innerHTML = empCount + " <span>hlö</span>";
         kioskCountEl.textContent = kioskCount;
 
-        var empCost = Math.max(calcEmployeeCost(empCount), MIN_FEE);
-        var total = empCost + kioskCount * KIOSK_PRICE;
+        const empCost = Math.max(calcEmployeeCost(empCount), MIN_FEE);
+        const total = empCost + kioskCount * KIOSK_PRICE;
 
         calcTotalEl.textContent = fmt(total);
         calcBreakdownEl.textContent = buildBreakdown(empCount, kioskCount);
 
         /* Sync summary text for contact form */
-        var summaryEl = document.getElementById("calcSummaryText");
+        const summaryEl = document.getElementById("calcSummaryText");
         if (summaryEl) {
-            var lines = ["Henkilöt: " + empCount + " hlö"];
+            const lines = ["Henkilöt: " + empCount + " hlö"];
             if (kioskCount > 0) lines.push("Leimauspäätteet: " + kioskCount + " kpl");
             lines.push("Erittely: " + buildBreakdown(empCount, kioskCount));
             lines.push("Yhteensä: " + fmt(total) + " / kk (alv 0 %)");
             summaryEl.textContent = lines.join(" | ");
         }
 
-        var active = activeTierIndex(empCount);
+        const active = activeTierIndex(empCount);
         tierEls.forEach(function (el, i) {
             el.classList.toggle("active", i === active);
         });
 
         /* Range fill track */
-        var pct = ((empCount - 1) / 199) * 100;
+        const pct = ((empCount - 1) / 199) * 100;
         empSlider.style.background =
             "linear-gradient(to right, var(--color-accent) " +
             pct +
@@ -579,8 +579,8 @@
     updateCalc();
 
     /* ===== Scroll animations ===== */
-    var animElements = document.querySelectorAll(".fade-in");
-    var observer = new IntersectionObserver(
+    const animElements = document.querySelectorAll(".fade-in");
+    const observer = new IntersectionObserver(
         function (entries) {
             entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
@@ -596,17 +596,17 @@
     });
 
     /* ===== Contact form (Web3Forms) ===== */
-    var contactForm = document.getElementById("contactForm");
-    var submitBtn = contactForm.querySelector("button[type='submit']");
+    const contactForm = document.getElementById("contactForm");
+    const submitBtn = contactForm.querySelector("button[type='submit']");
 
     /* Nollaa checkbox sivun latautuessa (selain muistaa tilan muuten) */
-    var includeCalcInit = document.getElementById("includeCalc");
+    const includeCalcInit = document.getElementById("includeCalc");
     includeCalcInit.checked = false;
     document.getElementById("calcAttachPreview").style.display = "none";
 
     /* Kysy tarjous -nappi laskurissa */
     document.getElementById("calcQuoteBtn").addEventListener("click", function () {
-        var checkbox = document.getElementById("includeCalc");
+        const checkbox = document.getElementById("includeCalc");
         checkbox.checked = true;
         document.getElementById("calcAttachPreview").style.display = "block";
         document.getElementById("contactForm").scrollIntoView({ behavior: "smooth" });
@@ -626,13 +626,13 @@
         if (submitBtn.disabled) return;
         submitBtn.disabled = true;
 
-        var name = document.getElementById("contact-name").value.trim();
-        var email = document.getElementById("contact-email").value.trim();
-        var message = document.getElementById("contact-message").value.trim();
-        var nameError = document.getElementById("nameError");
-        var emailError = document.getElementById("emailError");
-        var messageError = document.getElementById("messageError");
-        var formMessage = document.getElementById("formMessage");
+        const name = document.getElementById("contact-name").value.trim();
+        const email = document.getElementById("contact-email").value.trim();
+        const message = document.getElementById("contact-message").value.trim();
+        const nameError = document.getElementById("nameError");
+        const emailError = document.getElementById("emailError");
+        const messageError = document.getElementById("messageError");
+        const formMessage = document.getElementById("formMessage");
 
         /* Piilota aiemmat viestit */
         nameError.textContent = "";
@@ -642,8 +642,8 @@
         formMessage.style.display = "none";
 
         /* Validoi kaikki kentät kerralla */
-        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        var valid = true;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        let valid = true;
 
         if (!name) {
             nameError.textContent = "Syötä nimesi.";
@@ -669,24 +669,24 @@
         /* Aseta replyto dynaamisesti ennen lähetystä */
         document.getElementById("replytoField").value = email;
 
-        var originalText = submitBtn.textContent;
+        const originalText = submitBtn.textContent;
         submitBtn.textContent = "Lähetetään...";
 
         try {
-            var formData = new FormData(contactForm);
+            const formData = new FormData(contactForm);
             /* Liitä laskuridata vain jos checkbox on päällä */
-            var includeCalc = document.getElementById("includeCalc");
+            const includeCalc = document.getElementById("includeCalc");
             if (includeCalc.checked) {
                 formData.append(
                     "Laskurin_arvio",
                     document.getElementById("calcSummaryText").textContent,
                 );
             }
-            var response = await fetch("https://api.web3forms.com/submit", {
+            const response = await fetch("https://api.web3forms.com/submit", {
                 method: "POST",
                 body: formData,
             });
-            var data = await response.json();
+            const data = await response.json();
 
             if (response.ok) {
                 formMessage.textContent = "Kiitos viestistäsi! Vastaamme pian.";
