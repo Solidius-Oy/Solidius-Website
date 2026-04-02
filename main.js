@@ -59,19 +59,19 @@
         var LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
 
         /* Liike */
-        var MOUSE_RADIUS_FRAC = 0.14; /* Kursorin vaikutusalue (osuus näytön lävistäjästä) */
+        var MOUSE_RADIUS_FRAC = 0.05; /* Kursorin vaikutusalue (osuus näytön lävistäjästä) */
         var REPULSION = 3000; /* Kursorin työntövoima */
         var DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
         var MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
         var FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
         var LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
-        var LOGO_MARGIN = 40; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
+        var LOGO_MARGIN = 30; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
         var LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
-        var LOGO_ATTRACT_RADIUS_FRAC = 0.25; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
+        var LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
 
         /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
         var MOUSE_RADIUS = 180;
-        var LOGO_ATTRACT_RADIUS = 350;
+        var LOGO_ATTRACT_RADIUS = 50;
 
         /* ─── /ASETUKSET ─── */
 
@@ -126,24 +126,38 @@
             var img = new Image();
             img.onload = function () {
                 maskCtx.drawImage(img, 0, 0, logoW, logoH);
-                maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
-                /* Compute isotype centroid from mask pixels */
-                var sumX = 0,
-                    sumY = 0,
-                    count = 0;
+                var tempData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+
+                /* Find bounding box of the isotype pixels */
+                var minX = logoW,
+                    minY = logoH,
+                    maxX = 0,
+                    maxY = 0;
                 for (var py = 0; py < logoH; py++) {
                     for (var px = 0; px < logoW; px++) {
-                        if (maskData[(py * logoW + px) * 4 + 3] > 128) {
-                            sumX += px;
-                            sumY += py;
-                            count++;
+                        if (tempData[(py * logoW + px) * 4 + 3] > 128) {
+                            if (px < minX) minX = px;
+                            if (px > maxX) maxX = px;
+                            if (py < minY) minY = py;
+                            if (py > maxY) maxY = py;
                         }
                     }
                 }
-                if (count > 0) {
-                    isoCX = logoOffX + sumX / count;
-                    isoCY = logoOffY + sumY / count;
-                }
+
+                /* Redraw mask as a rounded rectangle covering the isotype bounds */
+                maskCtx.clearRect(0, 0, logoW, logoH);
+                var bw = maxX - minX;
+                var bh = maxY - minY;
+                var radius = Math.min(bw, bh) * 0.15;
+                maskCtx.beginPath();
+                maskCtx.roundRect(minX, minY, bw, bh, radius);
+                maskCtx.fillStyle = "white";
+                maskCtx.fill();
+                maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+
+                /* Centroid is the center of the bounding box */
+                isoCX = logoOffX + (minX + maxX) / 2;
+                isoCY = logoOffY + (minY + maxY) / 2;
             };
             img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
         }
