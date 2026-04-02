@@ -65,7 +65,7 @@
         var MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
         var FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
         var LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
-        var LOGO_MARGIN = 30; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
+        var LOGO_MARGIN = 25; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
         var LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
         var LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
 
@@ -94,72 +94,46 @@
         function buildLogoMask() {
             var logoEl = hero.querySelector(".hero-logo");
             if (!logoEl) return;
+
+            /* Find the isotype <g> (the one with the matrix transform) */
+            var isoG = logoEl.querySelector("g > g");
+            if (!isoG) return;
+
             var heroRect = hero.getBoundingClientRect();
-            var logoRect = logoEl.getBoundingClientRect();
+            var isoRect = isoG.getBoundingClientRect();
 
-            logoOffX = logoRect.left - heroRect.left;
-            logoOffY = logoRect.top - heroRect.top;
-            logoW = Math.round(logoRect.width);
-            logoH = Math.round(logoRect.height);
+            /* Isotype bounds relative to hero */
+            var ix = isoRect.left - heroRect.left;
+            var iy = isoRect.top - heroRect.top;
+            var iw = isoRect.width;
+            var ih = isoRect.height;
 
-            if (logoW === 0 || logoH === 0) return;
+            if (iw === 0 || ih === 0) return;
+
+            /* Use the full logo area for the mask canvas */
+            var logoRect2 = logoEl.getBoundingClientRect();
+            logoOffX = logoRect2.left - heroRect.left;
+            logoOffY = logoRect2.top - heroRect.top;
+            logoW = Math.round(logoRect2.width);
+            logoH = Math.round(logoRect2.height);
 
             maskCanvas.width = logoW;
             maskCanvas.height = logoH;
             maskCtx.clearRect(0, 0, logoW, logoH);
 
-            /* Clone SVG but keep only the isotype (the <g> with matrix transform), remove text path */
-            var svgClone = logoEl.cloneNode(true);
-            svgClone.setAttribute("width", logoW);
-            svgClone.setAttribute("height", logoH);
-            svgClone.style.color = "white";
-            svgClone.setAttribute("fill", "white");
-            var innerG = svgClone.querySelector("g");
-            if (innerG) {
-                /* Remove direct <path> children (the text), keep nested <g> (the isotype) */
-                var directPaths = innerG.querySelectorAll(":scope > path");
-                for (var i = 0; i < directPaths.length; i++) {
-                    directPaths[i].remove();
-                }
-            }
-            var svgStr = new XMLSerializer().serializeToString(svgClone);
-            var img = new Image();
-            img.onload = function () {
-                maskCtx.drawImage(img, 0, 0, logoW, logoH);
-                var tempData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+            /* Draw a rounded rectangle that covers the isotype shape */
+            var rx = ix - logoOffX;
+            var ry = iy - logoOffY;
+            var cornerRadius = Math.min(iw, ih) * 0.22;
 
-                /* Find bounding box of the isotype pixels */
-                var minX = logoW,
-                    minY = logoH,
-                    maxX = 0,
-                    maxY = 0;
-                for (var py = 0; py < logoH; py++) {
-                    for (var px = 0; px < logoW; px++) {
-                        if (tempData[(py * logoW + px) * 4 + 3] > 128) {
-                            if (px < minX) minX = px;
-                            if (px > maxX) maxX = px;
-                            if (py < minY) minY = py;
-                            if (py > maxY) maxY = py;
-                        }
-                    }
-                }
+            maskCtx.beginPath();
+            maskCtx.roundRect(rx, ry, iw, ih, cornerRadius);
+            maskCtx.fillStyle = "white";
+            maskCtx.fill();
 
-                /* Redraw mask as a rounded rectangle covering the isotype bounds */
-                maskCtx.clearRect(0, 0, logoW, logoH);
-                var bw = maxX - minX;
-                var bh = maxY - minY;
-                var radius = Math.min(bw, bh) * 0.15;
-                maskCtx.beginPath();
-                maskCtx.roundRect(minX, minY, bw, bh, radius);
-                maskCtx.fillStyle = "white";
-                maskCtx.fill();
-                maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
-
-                /* Centroid is the center of the bounding box */
-                isoCX = logoOffX + (minX + maxX) / 2;
-                isoCY = logoOffY + (minY + maxY) / 2;
-            };
-            img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
+            maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+            isoCX = logoOffX + rx + iw / 2;
+            isoCY = logoOffY + ry + ih / 2;
         }
 
         function isInsideLogo(px, py) {
