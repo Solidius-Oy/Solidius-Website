@@ -59,7 +59,7 @@
         var LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
 
         /* Liike */
-        var MOUSE_RADIUS = 180; /* Kursorin vaikutusalue (px) */
+        var MOUSE_RADIUS_FRAC = 0.14; /* Kursorin vaikutusalue (osuus näytön lävistäjästä) */
         var REPULSION = 3000; /* Kursorin työntövoima */
         var DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
         var MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
@@ -67,7 +67,11 @@
         var LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
         var LOGO_MARGIN = 40; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
         var LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
-        var LOGO_ATTRACT_RADIUS = 350; /* Vetovoiman kantama (px) — laaja kenttä */
+        var LOGO_ATTRACT_RADIUS_FRAC = 0.25; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
+
+        /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
+        var MOUSE_RADIUS = 180;
+        var LOGO_ATTRACT_RADIUS = 350;
 
         /* ─── /ASETUKSET ─── */
 
@@ -165,6 +169,11 @@
             canvas.style.width = w + "px";
             canvas.style.height = h + "px";
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            /* Skaalaa etäisyysparametrit näytön lävistäjän mukaan */
+            var diag = Math.sqrt(w * w + h * h);
+            MOUSE_RADIUS = Math.round(diag * MOUSE_RADIUS_FRAC);
+            LOGO_ATTRACT_RADIUS = Math.round(diag * LOGO_ATTRACT_RADIUS_FRAC);
         }
 
         function createParticles() {
@@ -314,21 +323,34 @@
             mouse.y = -9999;
         });
 
-        /* Pause when hero is not visible */
+        /* Pause when hero is not visible or tab is hidden */
+        var heroVisible = true;
+        var tabVisible = true;
+
+        function updateAnimLoop() {
+            if (heroVisible && tabVisible) {
+                if (!animId) animId = requestAnimationFrame(draw);
+            } else {
+                if (animId) {
+                    cancelAnimationFrame(animId);
+                    animId = null;
+                }
+            }
+        }
+
         var particleObserver = new IntersectionObserver(
             function (entries) {
-                if (entries[0].isIntersecting) {
-                    if (!animId) animId = requestAnimationFrame(draw);
-                } else {
-                    if (animId) {
-                        cancelAnimationFrame(animId);
-                        animId = null;
-                    }
-                }
+                heroVisible = entries[0].isIntersecting;
+                updateAnimLoop();
             },
             { threshold: 0 },
         );
         particleObserver.observe(hero);
+
+        document.addEventListener("visibilitychange", function () {
+            tabVisible = !document.hidden;
+            updateAnimLoop();
+        });
 
         resize();
         createParticles();
