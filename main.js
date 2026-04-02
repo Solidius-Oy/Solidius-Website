@@ -30,6 +30,162 @@
         { passive: true },
     );
 
+    /* ===== Particle Field ===== */
+    (function initParticles() {
+        var canvas = document.getElementById("heroParticles");
+        var ctx = canvas.getContext("2d");
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var PARTICLE_COUNT = 80;
+        var MOUSE_RADIUS = 140;
+        var REPULSION = 4000;
+        var RETURN_SPEED = 0.025;
+        var FRICTION = 0.92;
+        var particles = [];
+        var mouse = { x: -9999, y: -9999 };
+        var animId = null;
+        var w, h;
+
+        function resize() {
+            w = hero.offsetWidth;
+            h = hero.offsetHeight;
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            canvas.style.width = w + "px";
+            canvas.style.height = h + "px";
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function createParticles() {
+            particles = [];
+            for (var i = 0; i < PARTICLE_COUNT; i++) {
+                var x = Math.random() * w;
+                var y = Math.random() * h;
+                particles.push({
+                    x: x,
+                    y: y,
+                    homeX: x,
+                    homeY: y,
+                    vx: 0,
+                    vy: 0,
+                    size: Math.random() * 1.8 + 0.6,
+                    alpha: Math.random() * 0.4 + 0.15,
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+
+            for (var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+
+                /* Repulsion from cursor */
+                var dx = p.x - mouse.x;
+                var dy = p.y - mouse.y;
+                var distSq = dx * dx + dy * dy;
+                var dist = Math.sqrt(distSq);
+
+                if (dist < MOUSE_RADIUS && dist > 0) {
+                    var force = REPULSION / distSq;
+                    p.vx += (dx / dist) * force;
+                    p.vy += (dy / dist) * force;
+                }
+
+                /* Spring back to home */
+                p.vx += (p.homeX - p.x) * RETURN_SPEED;
+                p.vy += (p.homeY - p.y) * RETURN_SPEED;
+
+                /* Friction */
+                p.vx *= FRICTION;
+                p.vy *= FRICTION;
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                /* Glow intensity based on velocity */
+                var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                var glow = Math.min(speed * 0.15, 0.6);
+                var alpha = p.alpha + glow;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(108, 135, 255, " + alpha + ")";
+                ctx.fill();
+
+                /* Extra glow ring when moving fast */
+                if (speed > 1.5) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(108, 135, 255, " + glow * 0.3 + ")";
+                    ctx.fill();
+                }
+            }
+
+            /* Faint connection lines between nearby particles */
+            for (var i = 0; i < particles.length; i++) {
+                for (var j = i + 1; j < particles.length; j++) {
+                    var dx = particles[i].x - particles[j].x;
+                    var dy = particles[i].y - particles[j].y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = "rgba(108, 135, 255, " + (1 - dist / 100) * 0.08 + ")";
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            animId = requestAnimationFrame(draw);
+        }
+
+        hero.addEventListener(
+            "mousemove",
+            function (e) {
+                var rect = hero.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            },
+            { passive: true },
+        );
+
+        hero.addEventListener("mouseleave", function () {
+            mouse.x = -9999;
+            mouse.y = -9999;
+        });
+
+        /* Pause when hero is not visible */
+        var particleObserver = new IntersectionObserver(
+            function (entries) {
+                if (entries[0].isIntersecting) {
+                    if (!animId) animId = requestAnimationFrame(draw);
+                } else {
+                    if (animId) {
+                        cancelAnimationFrame(animId);
+                        animId = null;
+                    }
+                }
+            },
+            { threshold: 0 },
+        );
+        particleObserver.observe(hero);
+
+        resize();
+        createParticles();
+        animId = requestAnimationFrame(draw);
+
+        window.addEventListener(
+            "resize",
+            function () {
+                resize();
+                createParticles();
+            },
+            { passive: true },
+        );
+    })();
+
     /* ===== Chevron click ===== */
     var chevron = document.getElementById("heroChevron");
     function scrollToContent() {
