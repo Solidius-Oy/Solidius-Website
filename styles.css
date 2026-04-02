@@ -1237,6 +1237,10 @@ input[type="range"].calc-range::-moz-range-thumb {
         width: 70%;
     }
 
+    .hero {
+        padding-bottom: 100px;
+    }
+
     .tabs {
         gap: 6px;
     }
@@ -1273,6 +1277,10 @@ input[type="range"].calc-range::-moz-range-thumb {
     .hero-logo {
         max-width: 300px;
         width: 65%;
+    }
+
+    .hero {
+        padding-bottom: 130px;
     }
 
     .hero-chevron {
