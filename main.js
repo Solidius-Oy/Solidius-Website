@@ -52,7 +52,7 @@
 
         /* Yhdistysviivat */
         var LINE_MAX_DIST = 100; /* Max etäisyys viivoille (px) */
-        var LINE_OPACITY = 0.08; /* Viivojen kirkkaus (0–1) */
+        var LINE_OPACITY = 0.18; /* Viivojen kirkkaus (0–1) */
         var LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
 
         /* Liike */
@@ -61,6 +61,10 @@
         var DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
         var MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
         var FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
+        var LOGO_REPULSION = 2.0; /* Logon hylkimisvoima (0–2) */
+        var LOGO_MARGIN = 55; /* Tyhjä väli logon ympärillä (px) */
+        var LOGO_ATTRACT = 0.012; /* Logon vetovoima kaukaa (0–0.1) */
+        var LOGO_ATTRACT_RADIUS = 350; /* Etäisyys josta vetovoima alkaa (px) */
 
         /* ─── /ASETUKSET ─── */
 
@@ -68,6 +72,56 @@
         var mouse = { x: -9999, y: -9999 };
         var animId = null;
         var w, h;
+
+        /* Logo collision mask */
+        var maskCanvas = document.createElement("canvas");
+        var maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
+        var maskData = null;
+        var logoOffX = 0,
+            logoOffY = 0,
+            logoW = 0,
+            logoH = 0;
+
+        function buildLogoMask() {
+            var logoEl = hero.querySelector(".hero-logo");
+            if (!logoEl) return;
+            var heroRect = hero.getBoundingClientRect();
+            var logoRect = logoEl.getBoundingClientRect();
+
+            logoOffX = logoRect.left - heroRect.left;
+            logoOffY = logoRect.top - heroRect.top;
+            logoW = Math.round(logoRect.width);
+            logoH = Math.round(logoRect.height);
+
+            if (logoW === 0 || logoH === 0) return;
+
+            maskCanvas.width = logoW;
+            maskCanvas.height = logoH;
+            maskCtx.clearRect(0, 0, logoW, logoH);
+
+            /* Serialize SVG and draw to offscreen canvas */
+            var svgClone = logoEl.cloneNode(true);
+            svgClone.setAttribute("width", logoW);
+            svgClone.setAttribute("height", logoH);
+            svgClone.style.color = "white";
+            svgClone.setAttribute("fill", "white");
+            var svgStr = new XMLSerializer().serializeToString(svgClone);
+            var img = new Image();
+            img.onload = function () {
+                maskCtx.drawImage(img, 0, 0, logoW, logoH);
+                maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+            };
+            img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
+        }
+
+        function isInsideLogo(px, py) {
+            if (!maskData) return false;
+            var lx = Math.round(px - logoOffX);
+            var ly = Math.round(py - logoOffY);
+            if (lx < 0 || ly < 0 || lx >= logoW || ly >= logoH) return false;
+            /* Check alpha channel of the mask pixel */
+            return maskData[(ly * logoW + lx) * 4 + 3] > 128;
+        }
 
         function rgba(a) {
             return "rgba(" + COLOR_R + ", " + COLOR_G + ", " + COLOR_B + ", " + a + ")";
@@ -126,6 +180,46 @@
                     var force = REPULSION / distSq;
                     p.vx += (dx / dist) * force;
                     p.vy += (dy / dist) * force;
+                }
+
+                /* Repulsion from logo shape + margin zone */
+                var logoCX = logoOffX + logoW * 0.5;
+                var logoCY = logoOffY + logoH * 0.5;
+                var ldx = p.x - logoCX;
+                var ldy = p.y - logoCY;
+                var lDist = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
+                var ndx = ldx / lDist;
+                var ndy = ldy / lDist;
+
+                if (isInsideLogo(p.x, p.y)) {
+                    /* Inside logo — full push out */
+                    p.vx += ndx * LOGO_REPULSION;
+                    p.vy += ndy * LOGO_REPULSION;
+                } else if (LOGO_MARGIN > 0) {
+                    /* Check if within margin zone by sampling toward logo center */
+                    var testX = p.x - ndx * LOGO_MARGIN;
+                    var testY = p.y - ndy * LOGO_MARGIN;
+                    if (isInsideLogo(testX, testY)) {
+                        /* Estimate how deep into the margin we are */
+                        var edgeDist = 0;
+                        for (var s = 1; s <= LOGO_MARGIN; s++) {
+                            if (isInsideLogo(p.x - ndx * s, p.y - ndy * s)) {
+                                edgeDist = LOGO_MARGIN - s;
+                                break;
+                            }
+                        }
+                        var fade = edgeDist / LOGO_MARGIN;
+                        var force = LOGO_REPULSION * fade * fade;
+                        p.vx += ndx * force;
+                        p.vy += ndy * force;
+                    }
+                }
+
+                /* Gentle gravity pull toward logo from distance */
+                if (!isInsideLogo(p.x, p.y) && lDist > LOGO_MARGIN && lDist < LOGO_ATTRACT_RADIUS) {
+                    var attractFade = 1 - lDist / LOGO_ATTRACT_RADIUS;
+                    p.vx -= ndx * LOGO_ATTRACT * attractFade;
+                    p.vy -= ndy * LOGO_ATTRACT * attractFade;
                 }
 
                 /* Friction — keeps speeds from accumulating */
