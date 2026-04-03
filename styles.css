@@ -696,6 +696,26 @@ section {
     padding-left: 4px;
 }
 
+/* Compact per-user rate shown on mobile inside calculator */
+.calc-rate-compact {
+    display: none;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 0 4px;
+}
+
+.calc-rate-compact-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.calc-rate-compact-unit {
+    font-size: 0.85rem;
+    color: #a1a1aa;
+}
+
 .kiosk-row {
     display: flex;
     align-items: center;
@@ -1204,6 +1224,14 @@ input[type="range"].calc-range::-moz-range-thumb {
     .pricing-layout {
         grid-template-columns: 1fr;
         max-width: 560px;
+    }
+
+    .pricing-tiers-col {
+        display: none;
+    }
+
+    .calc-rate-compact {
+        display: flex;
     }
 
     .calc-box {

@@ -525,6 +525,7 @@
     const kioskCountEl = document.getElementById("kioskCount");
     const calcTotalEl = document.getElementById("calcTotal");
     const calcBreakdownEl = document.getElementById("calcBreakdown");
+    const calcRateValueEl = document.getElementById("calcRateValue");
     const tierEls = [
         document.getElementById("tier-1"),
         document.getElementById("tier-2"),
@@ -577,6 +578,12 @@
 
         calcTotalEl.textContent = fmt(total);
         calcBreakdownEl.textContent = buildBreakdown(empCount, kioskCount);
+
+        /* Update compact per-user rate */
+        const activeRate = TIERS[activeTierIndex(empCount)].rate;
+        if (calcRateValueEl) {
+            calcRateValueEl.textContent = activeRate.toFixed(2).replace(".", ",");
+        }
 
         /* Sync summary text for contact form */
         const summaryEl = document.getElementById("calcSummaryText");
