@@ -257,6 +257,15 @@ section {
     transition: none;
 }
 
+.hero-isotype-mask {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+}
+
 .hero-particles {
     position: absolute;
     top: 0;

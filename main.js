@@ -102,6 +102,22 @@
             isoH = 0; /* Isotypen mitat hero-koordinaateissa */
 
         const outlineSvgEl = document.getElementById("heroIsotypeOutline");
+        const maskSvgEl = document.getElementById("heroIsotypeMask");
+        const maskImg = new Image();
+        let maskReady = false;
+        maskImg.onload = function () {
+            maskReady = true;
+            buildLogoMask();
+        };
+        if (maskSvgEl) {
+            const maskClone = maskSvgEl.cloneNode(true);
+            maskClone.removeAttribute("id");
+            maskClone.removeAttribute("class");
+            maskClone.setAttribute("width", maskClone.getAttribute("viewBox").split(" ")[2]);
+            maskClone.setAttribute("height", maskClone.getAttribute("viewBox").split(" ")[3]);
+            const maskSvgStr = new XMLSerializer().serializeToString(maskClone);
+            maskImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(maskSvgStr);
+        }
 
         function buildLogoMask() {
             const logoEl = hero.querySelector(".hero-logo");
@@ -133,17 +149,8 @@
             maskCanvas.height = logoH;
             maskCtx.clearRect(0, 0, logoW, logoH);
 
-            /* Draw a rounded rectangle that covers the isotype shape */
             const rx = ix - logoOffX;
             const ry = iy - logoOffY;
-            const cornerRadius = Math.min(iw, ih) * 0.22;
-
-            maskCtx.beginPath();
-            maskCtx.roundRect(rx, ry, iw, ih, cornerRadius);
-            maskCtx.fillStyle = "white";
-            maskCtx.fill();
-
-            maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
             isoCX = logoOffX + rx + iw / 2;
             isoCY = logoOffY + ry + ih / 2;
 
@@ -152,6 +159,11 @@
             isoRy = logoOffY + ry;
             isoW = iw;
             isoH = ih;
+
+            if (maskReady) {
+                maskCtx.drawImage(maskImg, rx, ry, iw, ih);
+                maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+            }
 
             /* Position the outline SVG element over the isotype */
             if (outlineSvgEl) {
