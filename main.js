@@ -339,18 +339,20 @@
             }
 
             /* Faint connection lines between nearby particles */
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < LINE_MAX_DIST) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = rgba((1 - dist / LINE_MAX_DIST) * LINE_OPACITY);
-                        ctx.lineWidth = LINE_WIDTH;
-                        ctx.stroke();
+            if (LINE_OPACITY > 0) {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < LINE_MAX_DIST) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = rgba((1 - dist / LINE_MAX_DIST) * LINE_OPACITY);
+                            ctx.lineWidth = LINE_WIDTH;
+                            ctx.stroke();
+                        }
                     }
                 }
             }
