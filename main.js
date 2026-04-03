@@ -102,17 +102,6 @@
             isoW = 0,
             isoH = 0; /* Isotypen mitat hero-koordinaateissa */
 
-        /* Fixed isotype bounds in the hero-logo SVG viewBox.
-           Using these avoids browser/device differences in getBoundingClientRect() for SVG groups. */
-        const LOGO_VIEWBOX_X = 55.609986;
-        const LOGO_VIEWBOX_Y = 96.100014;
-        const LOGO_VIEWBOX_W = 360.06042;
-        const LOGO_VIEWBOX_H = 213.1766;
-        const ISOTYPE_BOX_X = 180.6402030704203;
-        const ISOTYPE_BOX_Y = 116.09972242044802;
-        const ISOTYPE_BOX_W = 109.99999785607268;
-        const ISOTYPE_BOX_H = 110.00028857955199;
-
         const outlineSvgEl = document.getElementById("heroIsotypeOutline");
         const maskSvgEl = document.getElementById("heroIsotypeMask");
         const maskImg = new Image();
@@ -126,6 +115,53 @@
             maskCtx.fillStyle = "white";
             maskCtx.fill();
             maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+        }
+
+        function transformPoint(point, matrix) {
+            return {
+                x: matrix.a * point.x + matrix.c * point.y + matrix.e,
+                y: matrix.b * point.x + matrix.d * point.y + matrix.f,
+            };
+        }
+
+        function getIsotypeGeometry(logoEl) {
+            const viewBox = logoEl.viewBox && logoEl.viewBox.baseVal;
+            const outerGroup = logoEl.querySelector("g");
+            const isoGroup = logoEl.querySelector("g > g");
+
+            if (!viewBox || !outerGroup || !isoGroup || !isoGroup.getBBox) return null;
+
+            const outerMatrix = outerGroup.transform.baseVal.consolidate();
+            const isoMatrix = isoGroup.transform.baseVal.consolidate();
+            const outer = outerMatrix ? outerMatrix.matrix : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+            const inner = isoMatrix ? isoMatrix.matrix : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+            const box = isoGroup.getBBox();
+
+            const corners = [
+                { x: box.x, y: box.y },
+                { x: box.x + box.width, y: box.y },
+                { x: box.x, y: box.y + box.height },
+                { x: box.x + box.width, y: box.y + box.height },
+            ].map(function (point) {
+                return transformPoint(transformPoint(point, inner), outer);
+            });
+
+            const xs = corners.map(function (point) {
+                return point.x;
+            });
+            const ys = corners.map(function (point) {
+                return point.y;
+            });
+
+            return {
+                viewBox: viewBox,
+                box: {
+                    x: Math.min.apply(null, xs),
+                    y: Math.min.apply(null, ys),
+                    width: Math.max.apply(null, xs) - Math.min.apply(null, xs),
+                    height: Math.max.apply(null, ys) - Math.min.apply(null, ys),
+                },
+            };
         }
 
         maskImg.onload = function () {
@@ -152,6 +188,8 @@
         function buildLogoMask() {
             const logoEl = hero.querySelector(".hero-logo");
             if (!logoEl) return;
+            const geometry = getIsotypeGeometry(logoEl);
+            if (!geometry) return;
 
             const heroRect = hero.getBoundingClientRect();
 
@@ -168,12 +206,12 @@
             maskCanvas.height = logoH;
             maskCtx.clearRect(0, 0, logoW, logoH);
 
-            const scaleX = logoRect2.width / LOGO_VIEWBOX_W;
-            const scaleY = logoRect2.height / LOGO_VIEWBOX_H;
-            const rx = (ISOTYPE_BOX_X - LOGO_VIEWBOX_X) * scaleX;
-            const ry = (ISOTYPE_BOX_Y - LOGO_VIEWBOX_Y) * scaleY;
-            const iw = ISOTYPE_BOX_W * scaleX;
-            const ih = ISOTYPE_BOX_H * scaleY;
+            const scaleX = logoRect2.width / geometry.viewBox.width;
+            const scaleY = logoRect2.height / geometry.viewBox.height;
+            const rx = (geometry.box.x - geometry.viewBox.x) * scaleX;
+            const ry = (geometry.box.y - geometry.viewBox.y) * scaleY;
+            const iw = geometry.box.width * scaleX;
+            const ih = geometry.box.height * scaleY;
 
             isoCX = logoOffX + rx + iw / 2;
             isoCY = logoOffY + ry + ih / 2;
