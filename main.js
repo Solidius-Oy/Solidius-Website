@@ -117,8 +117,24 @@
         const maskSvgEl = document.getElementById("heroIsotypeMask");
         const maskImg = new Image();
         let maskReady = false;
+
+        function drawFallbackMask(rx, ry, iw, ih) {
+            const fallbackCorner = Math.min(iw, ih) * 0.22;
+            maskCtx.clearRect(0, 0, logoW, logoH);
+            maskCtx.beginPath();
+            maskCtx.roundRect(rx, ry, iw, ih, fallbackCorner);
+            maskCtx.fillStyle = "white";
+            maskCtx.fill();
+            maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+        }
+
         maskImg.onload = function () {
             maskReady = true;
+            buildLogoMask();
+        };
+        maskImg.onerror = function () {
+            maskReady = false;
+            console.warn("hero particle mask could not be loaded; using fallback mask");
             buildLogoMask();
         };
         if (maskSvgEl) {
@@ -129,6 +145,8 @@
             maskClone.setAttribute("height", maskClone.getAttribute("viewBox").split(" ")[3]);
             const maskSvgStr = new XMLSerializer().serializeToString(maskClone);
             maskImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(maskSvgStr);
+        } else {
+            console.warn("hero particle mask element is missing; using fallback mask");
         }
 
         function buildLogoMask() {
@@ -169,6 +187,8 @@
             if (maskReady) {
                 maskCtx.drawImage(maskImg, rx, ry, iw, ih);
                 maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
+            } else {
+                drawFallbackMask(rx, ry, iw, ih);
             }
 
             /* Position the outline SVG element over the isotype */
@@ -236,7 +256,7 @@
             const mouseRadiusSq = MOUSE_RADIUS * MOUSE_RADIUS;
             const logoAttractRadiusSq = LOGO_ATTRACT_RADIUS * LOGO_ATTRACT_RADIUS;
 
-            /* Count particles near the isotype for glow */
+            /* Count particles near the isotype for outline intensity */
             let nearCount = 0;
 
             for (let i = 0; i < particles.length; i++) {
@@ -267,7 +287,7 @@
                 const ndy = ldy / lDist;
                 const insideLogo = isInsideLogo(p.x, p.y);
 
-                /* Track particles within attract radius for glow */
+                /* Track particles within attract radius for outline intensity */
                 if (lDistSq < logoAttractRadiusSq) nearCount++;
 
                 if (insideLogo) {
