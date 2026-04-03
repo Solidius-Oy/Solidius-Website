@@ -85,6 +85,7 @@
         let animId = null;
         let w, h;
         let strokeLevel = 0; /* Nykyinen reunahehku-taso (0–1), tasoitettu */
+        let lastOutlineOpacity = -1;
 
         /* Logo collision mask */
         const maskCanvas = document.createElement("canvas");
@@ -232,6 +233,8 @@
         function draw() {
             ctx.clearRect(0, 0, w, h);
             tick++;
+            const mouseRadiusSq = MOUSE_RADIUS * MOUSE_RADIUS;
+            const logoAttractRadiusSq = LOGO_ATTRACT_RADIUS * LOGO_ATTRACT_RADIUS;
 
             /* Count particles near the isotype for glow */
             let nearCount = 0;
@@ -247,9 +250,9 @@
                 const dx = p.x - mouse.x;
                 const dy = p.y - mouse.y;
                 const distSq = dx * dx + dy * dy;
-                const dist = Math.sqrt(distSq);
 
-                if (dist < MOUSE_RADIUS && dist > 0) {
+                if (distSq < mouseRadiusSq && distSq > 0) {
+                    const dist = Math.sqrt(distSq);
                     const force = REPULSION / distSq;
                     p.vx += (dx / dist) * force;
                     p.vy += (dy / dist) * force;
@@ -258,14 +261,16 @@
                 /* Repulsion from isotype shape + margin zone */
                 const ldx = p.x - isoCX;
                 const ldy = p.y - isoCY;
-                const lDist = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
+                const lDistSq = ldx * ldx + ldy * ldy;
+                const lDist = Math.sqrt(lDistSq) || 1;
                 const ndx = ldx / lDist;
                 const ndy = ldy / lDist;
+                const insideLogo = isInsideLogo(p.x, p.y);
 
                 /* Track particles within attract radius for glow */
-                if (lDist < LOGO_ATTRACT_RADIUS) nearCount++;
+                if (lDistSq < logoAttractRadiusSq) nearCount++;
 
-                if (isInsideLogo(p.x, p.y)) {
+                if (insideLogo) {
                     /* Inside logo — full push out */
                     p.vx += ndx * LOGO_REPULSION;
                     p.vy += ndy * LOGO_REPULSION;
@@ -290,7 +295,7 @@
                 }
 
                 /* Gentle gravity pull toward logo from distance */
-                if (!isInsideLogo(p.x, p.y) && lDist > LOGO_MARGIN && lDist < LOGO_ATTRACT_RADIUS) {
+                if (!insideLogo && lDist > LOGO_MARGIN && lDistSq < logoAttractRadiusSq) {
                     const attractFade = 1 - lDist / LOGO_ATTRACT_RADIUS;
                     p.vx -= ndx * LOGO_ATTRACT * attractFade;
                     p.vy -= ndy * LOGO_ATTRACT * attractFade;
@@ -335,7 +340,11 @@
             if (strokeLevel < 0.005) strokeLevel = 0;
 
             if (outlineSvgEl) {
-                outlineSvgEl.style.opacity = strokeLevel * STROKE_MAX_ALPHA;
+                const outlineOpacity = strokeLevel * STROKE_MAX_ALPHA;
+                if (Math.abs(outlineOpacity - lastOutlineOpacity) > 0.002) {
+                    outlineSvgEl.style.opacity = outlineOpacity;
+                    lastOutlineOpacity = outlineOpacity;
+                }
             }
 
             /* Faint connection lines between nearby particles */
