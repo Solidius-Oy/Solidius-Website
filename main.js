@@ -101,6 +101,17 @@
             isoW = 0,
             isoH = 0; /* Isotypen mitat hero-koordinaateissa */
 
+        /* Fixed isotype bounds in the hero-logo SVG viewBox.
+           Using these avoids browser/device differences in getBoundingClientRect() for SVG groups. */
+        const LOGO_VIEWBOX_X = 55.609986;
+        const LOGO_VIEWBOX_Y = 96.100014;
+        const LOGO_VIEWBOX_W = 360.06042;
+        const LOGO_VIEWBOX_H = 213.1766;
+        const ISOTYPE_BOX_X = 180.6402030704203;
+        const ISOTYPE_BOX_Y = 116.09972242044802;
+        const ISOTYPE_BOX_W = 109.99999785607268;
+        const ISOTYPE_BOX_H = 110.00028857955199;
+
         const outlineSvgEl = document.getElementById("heroIsotypeOutline");
         const maskSvgEl = document.getElementById("heroIsotypeMask");
         const maskImg = new Image();
@@ -123,20 +134,7 @@
             const logoEl = hero.querySelector(".hero-logo");
             if (!logoEl) return;
 
-            /* Find the isotype <g> (the one with the matrix transform) */
-            const isoG = logoEl.querySelector("g > g");
-            if (!isoG) return;
-
             const heroRect = hero.getBoundingClientRect();
-            const isoRect = isoG.getBoundingClientRect();
-
-            /* Isotype bounds relative to hero */
-            const ix = isoRect.left - heroRect.left;
-            const iy = isoRect.top - heroRect.top;
-            const iw = isoRect.width;
-            const ih = isoRect.height;
-
-            if (iw === 0 || ih === 0) return;
 
             /* Use the full logo area for the mask canvas */
             const logoRect2 = logoEl.getBoundingClientRect();
@@ -145,12 +143,19 @@
             logoW = Math.round(logoRect2.width);
             logoH = Math.round(logoRect2.height);
 
+            if (logoW === 0 || logoH === 0) return;
+
             maskCanvas.width = logoW;
             maskCanvas.height = logoH;
             maskCtx.clearRect(0, 0, logoW, logoH);
 
-            const rx = ix - logoOffX;
-            const ry = iy - logoOffY;
+            const scaleX = logoRect2.width / LOGO_VIEWBOX_W;
+            const scaleY = logoRect2.height / LOGO_VIEWBOX_H;
+            const rx = (ISOTYPE_BOX_X - LOGO_VIEWBOX_X) * scaleX;
+            const ry = (ISOTYPE_BOX_Y - LOGO_VIEWBOX_Y) * scaleY;
+            const iw = ISOTYPE_BOX_W * scaleX;
+            const ih = ISOTYPE_BOX_H * scaleY;
+
             isoCX = logoOffX + rx + iw / 2;
             isoCY = logoOffY + ry + ih / 2;
 
