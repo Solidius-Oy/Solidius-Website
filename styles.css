@@ -248,6 +248,15 @@ section {
     z-index: 1;
 }
 
+.hero-isotype-outline {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    color: #fff;
+    transition: none;
+}
+
 .hero-particles {
     position: absolute;
     top: 0;

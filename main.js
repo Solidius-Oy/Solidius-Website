@@ -55,11 +55,11 @@
 
         /* Yhdistysviivat */
         const LINE_MAX_DIST = 100; /* Max etäisyys viivoille (px) */
-        const LINE_OPACITY = 0.08; /* Viivojen kirkkaus (0–1) */
+        const LINE_OPACITY = 0.0; /* Viivojen kirkkaus (0–1) */
         const LINE_WIDTH = 0.5; /* Viivojen paksuus (px) */
 
         /* Liike */
-        const MOUSE_RADIUS_FRAC = 0.05; /* Kursorin vaikutusalue (osuus näytön lävistäjästä) */
+        const MOUSE_RADIUS_FRAC = 0.07; /* Kursorin vaikutusalue (osuus näytön lävistäjästä) */
         const REPULSION = 3000; /* Kursorin työntövoima */
         const DRIFT_SPEED = 0.05; /* Leijunnan maksiminopeus */
         const MAX_SPEED = 0.8; /* Absoluuttinen nopeusraja */
@@ -68,6 +68,11 @@
         const LOGO_MARGIN = 25; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
         const LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
         const LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
+
+        /* Isotypen reunahehku — reagoi lähellä olevien partikkelien määrään */
+        const STROKE_MAX_ALPHA = 1; /* Maksimikirkkaus (0–1) */
+        const STROKE_THRESHOLD = 0.2; /* Partikkeliosuus jolla outline alkaa näkyä (0–1) */
+        const STROKE_SMOOTHING = 1; /* Kuinka nopeasti reagoi (0–1, pienempi = pehmeämpi) */
 
         /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
         let MOUSE_RADIUS = 180;
@@ -79,6 +84,7 @@
         const mouse = { x: -9999, y: -9999 };
         let animId = null;
         let w, h;
+        let strokeLevel = 0; /* Nykyinen reunahehku-taso (0–1), tasoitettu */
 
         /* Logo collision mask */
         const maskCanvas = document.createElement("canvas");
@@ -90,6 +96,12 @@
             logoH = 0;
         let isoCX = 0,
             isoCY = 0; /* Isotype center in hero coordinates */
+        let isoRx = 0,
+            isoRy = 0,
+            isoW = 0,
+            isoH = 0; /* Isotypen mitat hero-koordinaateissa */
+
+        const outlineSvgEl = document.getElementById("heroIsotypeOutline");
 
         function buildLogoMask() {
             const logoEl = hero.querySelector(".hero-logo");
@@ -134,6 +146,20 @@
             maskData = maskCtx.getImageData(0, 0, logoW, logoH).data;
             isoCX = logoOffX + rx + iw / 2;
             isoCY = logoOffY + ry + ih / 2;
+
+            /* Tallenna isotypen mitat reunahehkua varten (hero-koordinaatit) */
+            isoRx = logoOffX + rx;
+            isoRy = logoOffY + ry;
+            isoW = iw;
+            isoH = ih;
+
+            /* Position the outline SVG element over the isotype */
+            if (outlineSvgEl) {
+                outlineSvgEl.style.left = isoRx + "px";
+                outlineSvgEl.style.top = isoRy + "px";
+                outlineSvgEl.style.width = isoW + "px";
+                outlineSvgEl.style.height = isoH + "px";
+            }
         }
 
         function isInsideLogo(px, py) {
@@ -190,6 +216,9 @@
             ctx.clearRect(0, 0, w, h);
             tick++;
 
+            /* Count particles near the isotype for glow */
+            let nearCount = 0;
+
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
 
@@ -215,6 +244,9 @@
                 const lDist = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
                 const ndx = ldx / lDist;
                 const ndy = ldy / lDist;
+
+                /* Track particles within attract radius for glow */
+                if (lDist < LOGO_ATTRACT_RADIUS) nearCount++;
 
                 if (isInsideLogo(p.x, p.y)) {
                     /* Inside logo — full push out */
@@ -274,6 +306,19 @@
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fillStyle = rgba(p.alpha);
                 ctx.fill();
+            }
+
+            /* Update isotype outline opacity based on nearby particle density */
+            const density = nearCount / PARTICLE_COUNT;
+            const targetStroke =
+                density > STROKE_THRESHOLD
+                    ? Math.min(1, (density - STROKE_THRESHOLD) / (1 - STROKE_THRESHOLD))
+                    : 0;
+            strokeLevel += (targetStroke - strokeLevel) * STROKE_SMOOTHING;
+            if (strokeLevel < 0.005) strokeLevel = 0;
+
+            if (outlineSvgEl) {
+                outlineSvgEl.style.opacity = strokeLevel * STROKE_MAX_ALPHA;
             }
 
             /* Faint connection lines between nearby particles */
