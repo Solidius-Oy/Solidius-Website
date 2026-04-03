@@ -1,7 +1,7 @@
 {
     "name": "Solidius Oy",
     "short_name": "Solidius",
-    "description": "Solidius Shift – työajan seuranta, vuorosuunnittelu ja henkilöstöhallinta",
+    "description": "Solidius Shift - työajan seuranta, vuorosuunnittelu ja henkilöstöhallinta",
     "icons": [
         {
             "src": "img/android-chrome-192x192.png",
