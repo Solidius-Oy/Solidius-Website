@@ -103,7 +103,7 @@
             isoH = 0; /* Isotypen mitat hero-koordinaateissa */
 
         const outlineSvgEl = document.getElementById("heroIsotypeOutline");
-        const maskSvgEl = document.getElementById("heroIsotypeMask");
+        const maskSvgTemplateEl = document.getElementById("heroIsotypeMaskTemplate");
         const maskImg = new Image();
         let maskReady = false;
 
@@ -173,16 +173,21 @@
             console.warn("hero particle mask could not be loaded; using fallback mask");
             buildLogoMask();
         };
-        if (maskSvgEl) {
-            const maskClone = maskSvgEl.cloneNode(true);
-            maskClone.removeAttribute("id");
-            maskClone.removeAttribute("class");
-            maskClone.setAttribute("width", maskClone.getAttribute("viewBox").split(" ")[2]);
-            maskClone.setAttribute("height", maskClone.getAttribute("viewBox").split(" ")[3]);
-            const maskSvgStr = new XMLSerializer().serializeToString(maskClone);
-            maskImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(maskSvgStr);
+        if (maskSvgTemplateEl && maskSvgTemplateEl.content) {
+            const maskSvgEl = maskSvgTemplateEl.content.querySelector("svg");
+            const maskClone = maskSvgEl ? maskSvgEl.cloneNode(true) : null;
+            if (!maskClone) {
+                console.warn("hero particle mask template is empty; using fallback mask");
+            } else {
+                maskClone.removeAttribute("id");
+                maskClone.removeAttribute("class");
+                maskClone.setAttribute("width", maskClone.getAttribute("viewBox").split(" ")[2]);
+                maskClone.setAttribute("height", maskClone.getAttribute("viewBox").split(" ")[3]);
+                const maskSvgStr = new XMLSerializer().serializeToString(maskClone);
+                maskImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(maskSvgStr);
+            }
         } else {
-            console.warn("hero particle mask element is missing; using fallback mask");
+            console.warn("hero particle mask template is missing; using fallback mask");
         }
 
         function buildLogoMask() {
