@@ -34,7 +34,10 @@
     (function initParticles() {
         const canvas = document.getElementById("heroParticles");
         const ctx = canvas.getContext("2d");
+        const outlineCanvas = document.getElementById("heroOutline");
+        const outlineCtx = outlineCanvas ? outlineCanvas.getContext("2d") : null;
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const TAU = Math.PI * 2;
 
         /* ─── SÄÄDETTÄVÄT ASETUKSET ─── */
 
@@ -69,14 +72,20 @@
         const LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
         const LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
 
-        /* Isotypen reunahehku — reagoi lähellä olevien partikkelien määrään */
-        const STROKE_MAX_ALPHA = 1; /* Maksimikirkkaus (0–1) */
-        const STROKE_THRESHOLD = 0.2; /* Partikkeliosuus jolla outline alkaa näkyä (0–1) */
-        const STROKE_SMOOTHING = 1; /* Kuinka nopeasti reagoi (0–1, pienempi = pehmeämpi) */
+        /* Isotypen dynaaminen outline — lasketaan koko reunalle */
+        const OUTLINE_SEGMENTS = 220; /* Kuinka tiheästi reuna näytteistetään */
+        const OUTLINE_MAX_ALPHA = 0.95; /* Maksimikirkkaus (0–1) */
+        const OUTLINE_THRESHOLD = 0.18; /* Kuinka paljon paikallista energiaa vaaditaan */
+        const OUTLINE_SMOOTHING = 0.22; /* Kuinka nopeasti segmentit reagoivat */
+        const OUTLINE_WIDTH = 1.35; /* Outlinen peruspaksuus (px) */
+        const OUTLINE_BLUR = 10; /* Pehmeän hehkun määrä */
+        const OUTLINE_INFLUENCE_RADIUS_FRAC = 0.045; /* Partikkelien vaikutusetäisyys */
+        const OUTLINE_MIN_ALPHA = 0.02; /* Piirtoraja hyvin himmeille segmenteille */
 
         /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
         let MOUSE_RADIUS = 180;
         let LOGO_ATTRACT_RADIUS = 50;
+        let OUTLINE_INFLUENCE_RADIUS = 42;
 
         /* ─── /ASETUKSET ─── */
 
@@ -84,8 +93,8 @@
         const mouse = { x: -9999, y: -9999 };
         let animId = null;
         let w, h;
-        let strokeLevel = 0; /* Nykyinen reunahehku-taso (0–1), tasoitettu */
-        let lastOutlineOpacity = -1;
+        let outlinePoints = [];
+        let outlineLevels = [];
 
         /* Logo collision mask */
         const maskCanvas = document.createElement("canvas");
@@ -102,7 +111,6 @@
             isoW = 0,
             isoH = 0; /* Isotypen mitat hero-koordinaateissa */
 
-        const outlineSvgEl = document.getElementById("heroIsotypeOutline");
         const maskSvgTemplateEl = document.getElementById("heroIsotypeMaskTemplate");
         const maskImg = new Image();
         let maskReady = false;
@@ -122,6 +130,169 @@
                 x: matrix.a * point.x + matrix.c * point.y + matrix.e,
                 y: matrix.b * point.x + matrix.d * point.y + matrix.f,
             };
+        }
+
+        function buildOutlineContour() {
+            if (!maskData || !logoW || !logoH) {
+                outlinePoints = [];
+                outlineLevels = [];
+                return;
+            }
+
+            const bins = new Array(OUTLINE_SEGMENTS).fill(null);
+            const localCenterX = isoCX - logoOffX;
+            const localCenterY = isoCY - logoOffY;
+
+            for (let y = 1; y < logoH - 1; y++) {
+                for (let x = 1; x < logoW - 1; x++) {
+                    const alphaIndex = (y * logoW + x) * 4 + 3;
+                    if (maskData[alphaIndex] <= 128) continue;
+
+                    const left = maskData[(y * logoW + (x - 1)) * 4 + 3] > 128;
+                    const right = maskData[(y * logoW + (x + 1)) * 4 + 3] > 128;
+                    const up = maskData[((y - 1) * logoW + x) * 4 + 3] > 128;
+                    const down = maskData[((y + 1) * logoW + x) * 4 + 3] > 128;
+                    if (left && right && up && down) continue;
+
+                    const dx = x - localCenterX;
+                    const dy = y - localCenterY;
+                    const distSq = dx * dx + dy * dy;
+                    let angle = Math.atan2(dy, dx);
+                    if (angle < 0) angle += TAU;
+                    const binIndex =
+                        Math.floor((angle / TAU) * OUTLINE_SEGMENTS) % OUTLINE_SEGMENTS;
+                    const current = bins[binIndex];
+
+                    if (!current || distSq > current.distSq) {
+                        bins[binIndex] = {
+                            x: logoOffX + x + 0.5,
+                            y: logoOffY + y + 0.5,
+                            distSq: distSq,
+                        };
+                    }
+                }
+            }
+
+            const firstIndex = bins.findIndex(function (point) {
+                return !!point;
+            });
+            if (firstIndex === -1) {
+                outlinePoints = [];
+                outlineLevels = [];
+                return;
+            }
+
+            const filled = bins.map(function (point) {
+                return point ? { x: point.x, y: point.y } : null;
+            });
+
+            for (let i = 0; i < filled.length; i++) {
+                if (filled[i]) continue;
+
+                let prevIndex = (i - 1 + filled.length) % filled.length;
+                while (!filled[prevIndex])
+                    prevIndex = (prevIndex - 1 + filled.length) % filled.length;
+
+                let nextIndex = (i + 1) % filled.length;
+                while (!filled[nextIndex]) nextIndex = (nextIndex + 1) % filled.length;
+
+                const prevPoint = filled[prevIndex];
+                const nextPoint = filled[nextIndex];
+                const span =
+                    nextIndex >= prevIndex
+                        ? nextIndex - prevIndex
+                        : nextIndex + filled.length - prevIndex;
+                const offset = i >= prevIndex ? i - prevIndex : i + filled.length - prevIndex;
+                const t = span ? offset / span : 0;
+
+                filled[i] = {
+                    x: prevPoint.x + (nextPoint.x - prevPoint.x) * t,
+                    y: prevPoint.y + (nextPoint.y - prevPoint.y) * t,
+                };
+            }
+
+            let smoothed = filled;
+            for (let pass = 0; pass < 2; pass++) {
+                smoothed = smoothed.map(function (point, index, points) {
+                    const prev = points[(index - 1 + points.length) % points.length];
+                    const next = points[(index + 1) % points.length];
+                    return {
+                        x: (prev.x + point.x * 2 + next.x) / 4,
+                        y: (prev.y + point.y * 2 + next.y) / 4,
+                    };
+                });
+            }
+
+            outlinePoints = smoothed;
+            outlineLevels = new Array(outlinePoints.length).fill(0);
+        }
+
+        function drawOutline() {
+            if (!outlineCtx) return;
+
+            outlineCtx.clearRect(0, 0, w, h);
+            if (outlinePoints.length < 2) return;
+
+            const influenceRadiusSq = OUTLINE_INFLUENCE_RADIUS * OUTLINE_INFLUENCE_RADIUS;
+            const localLevels = new Array(outlinePoints.length);
+            let peakLevel = 0;
+
+            for (let i = 0; i < outlinePoints.length; i++) {
+                const point = outlinePoints[i];
+                let energy = 0;
+
+                for (let j = 0; j < particles.length; j++) {
+                    const particle = particles[j];
+                    const dx = particle.x - point.x;
+                    const dy = particle.y - point.y;
+                    const distSq = dx * dx + dy * dy;
+                    if (distSq >= influenceRadiusSq) continue;
+
+                    const dist = Math.sqrt(distSq);
+                    energy += 1 - dist / OUTLINE_INFLUENCE_RADIUS;
+                }
+
+                const normalized = Math.min(1, energy / 3.2);
+                const targetLevel =
+                    normalized > OUTLINE_THRESHOLD
+                        ? Math.min(1, (normalized - OUTLINE_THRESHOLD) / (1 - OUTLINE_THRESHOLD))
+                        : 0;
+
+                outlineLevels[i] += (targetLevel - outlineLevels[i]) * OUTLINE_SMOOTHING;
+                if (outlineLevels[i] < 0.005) outlineLevels[i] = 0;
+                localLevels[i] = outlineLevels[i];
+            }
+
+            const smoothedLevels = localLevels.map(function (level, index, levels) {
+                const prev = levels[(index - 1 + levels.length) % levels.length];
+                const next = levels[(index + 1) % levels.length];
+                const smoothedLevel = (prev + level * 2 + next) / 4;
+                if (smoothedLevel > peakLevel) peakLevel = smoothedLevel;
+                return smoothedLevel;
+            });
+
+            if (peakLevel < OUTLINE_MIN_ALPHA) return;
+
+            outlineCtx.lineCap = "round";
+            outlineCtx.lineJoin = "round";
+
+            for (let i = 0; i < outlinePoints.length; i++) {
+                const nextIndex = (i + 1) % outlinePoints.length;
+                const alpha =
+                    (smoothedLevels[i] + smoothedLevels[nextIndex]) * 0.5 * OUTLINE_MAX_ALPHA;
+                if (alpha < OUTLINE_MIN_ALPHA) continue;
+
+                outlineCtx.beginPath();
+                outlineCtx.moveTo(outlinePoints[i].x, outlinePoints[i].y);
+                outlineCtx.lineTo(outlinePoints[nextIndex].x, outlinePoints[nextIndex].y);
+                outlineCtx.lineWidth = OUTLINE_WIDTH + alpha * 1.2;
+                outlineCtx.strokeStyle = rgba(alpha);
+                outlineCtx.shadowBlur = OUTLINE_BLUR + alpha * 10;
+                outlineCtx.shadowColor = rgba(Math.min(1, alpha * 0.85));
+                outlineCtx.stroke();
+            }
+
+            outlineCtx.shadowBlur = 0;
         }
 
         function getIsotypeGeometry(logoEl) {
@@ -234,13 +405,7 @@
                 drawFallbackMask(rx, ry, iw, ih);
             }
 
-            /* Position the outline SVG element over the isotype */
-            if (outlineSvgEl) {
-                outlineSvgEl.style.left = isoRx + "px";
-                outlineSvgEl.style.top = isoRy + "px";
-                outlineSvgEl.style.width = isoW + "px";
-                outlineSvgEl.style.height = isoH + "px";
-            }
+            buildOutlineContour();
         }
 
         function isInsideLogo(px, py) {
@@ -265,10 +430,22 @@
             canvas.style.height = h + "px";
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+            if (outlineCanvas && outlineCtx) {
+                outlineCanvas.width = w * dpr;
+                outlineCanvas.height = h * dpr;
+                outlineCanvas.style.width = w + "px";
+                outlineCanvas.style.height = h + "px";
+                outlineCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
             /* Skaalaa etäisyysparametrit näytön lävistäjän mukaan */
             const diag = Math.sqrt(w * w + h * h);
             MOUSE_RADIUS = Math.round(diag * MOUSE_RADIUS_FRAC);
             LOGO_ATTRACT_RADIUS = Math.round(diag * LOGO_ATTRACT_RADIUS_FRAC);
+            OUTLINE_INFLUENCE_RADIUS = Math.max(
+                22,
+                Math.round(diag * OUTLINE_INFLUENCE_RADIUS_FRAC),
+            );
         }
 
         function createParticles() {
@@ -299,9 +476,6 @@
             const mouseRadiusSq = MOUSE_RADIUS * MOUSE_RADIUS;
             const logoAttractRadiusSq = LOGO_ATTRACT_RADIUS * LOGO_ATTRACT_RADIUS;
 
-            /* Count particles near the isotype for outline intensity */
-            let nearCount = 0;
-
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
 
@@ -329,9 +503,6 @@
                 const ndx = ldx / lDist;
                 const ndy = ldy / lDist;
                 const insideLogo = isInsideLogo(p.x, p.y);
-
-                /* Track particles within attract radius for outline intensity */
-                if (lDistSq < logoAttractRadiusSq) nearCount++;
 
                 if (insideLogo) {
                     /* Inside logo — full push out */
@@ -393,22 +564,7 @@
                 ctx.fill();
             }
 
-            /* Update isotype outline opacity based on nearby particle density */
-            const density = nearCount / PARTICLE_COUNT;
-            const targetStroke =
-                density > STROKE_THRESHOLD
-                    ? Math.min(1, (density - STROKE_THRESHOLD) / (1 - STROKE_THRESHOLD))
-                    : 0;
-            strokeLevel += (targetStroke - strokeLevel) * STROKE_SMOOTHING;
-            if (strokeLevel < 0.005) strokeLevel = 0;
-
-            if (outlineSvgEl) {
-                const outlineOpacity = strokeLevel * STROKE_MAX_ALPHA;
-                if (Math.abs(outlineOpacity - lastOutlineOpacity) > 0.002) {
-                    outlineSvgEl.style.opacity = outlineOpacity;
-                    lastOutlineOpacity = outlineOpacity;
-                }
-            }
+            drawOutline();
 
             /* Faint connection lines between nearby particles */
             if (LINE_OPACITY > 0) {
