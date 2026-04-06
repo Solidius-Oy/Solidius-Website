@@ -69,6 +69,7 @@
         const FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
         const LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
         const LOGO_MARGIN = 25; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
+        const LOGO_MARGIN_SAMPLE_STEP = 4; /* Kuinka harvasti margin-alue tarkistetaan */
         const LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
         const LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
 
@@ -472,6 +473,35 @@
             return maskData[(ly * logoW + lx) * 4 + 3] > 128;
         }
 
+        function estimateLogoMarginFade(px, py, ndx, ndy) {
+            const coarseStep = Math.max(2, LOGO_MARGIN_SAMPLE_STEP);
+            let coarseHit = 0;
+
+            for (let s = coarseStep; s <= LOGO_MARGIN; s += coarseStep) {
+                if (isInsideLogo(px - ndx * s, py - ndy * s)) {
+                    coarseHit = s;
+                    break;
+                }
+            }
+
+            if (!coarseHit && isInsideLogo(px - ndx * LOGO_MARGIN, py - ndy * LOGO_MARGIN)) {
+                coarseHit = LOGO_MARGIN;
+            }
+
+            if (!coarseHit) return 0;
+
+            const start = Math.max(1, coarseHit - coarseStep + 1);
+            let hitStep = coarseHit;
+            for (let s = start; s <= coarseHit; s++) {
+                if (isInsideLogo(px - ndx * s, py - ndy * s)) {
+                    hitStep = s;
+                    break;
+                }
+            }
+
+            return (LOGO_MARGIN - hitStep) / LOGO_MARGIN;
+        }
+
         function rgba(a) {
             return "rgba(" + COLOR_R + ", " + COLOR_G + ", " + COLOR_B + ", " + a + ")";
         }
@@ -530,6 +560,8 @@
             tick++;
             const mouseRadiusSq = MOUSE_RADIUS * MOUSE_RADIUS;
             const logoAttractRadiusSq = LOGO_ATTRACT_RADIUS * LOGO_ATTRACT_RADIUS;
+            const logoMarginOuterRadius = outlineMaxRadius + LOGO_MARGIN;
+            const logoMarginOuterRadiusSq = logoMarginOuterRadius * logoMarginOuterRadius;
 
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
@@ -563,20 +595,10 @@
                     /* Inside logo — full push out */
                     p.vx += ndx * LOGO_REPULSION;
                     p.vy += ndy * LOGO_REPULSION;
-                } else if (LOGO_MARGIN > 0) {
-                    /* Check if within margin zone by sampling toward logo center */
-                    const testX = p.x - ndx * LOGO_MARGIN;
-                    const testY = p.y - ndy * LOGO_MARGIN;
-                    if (isInsideLogo(testX, testY)) {
-                        /* Estimate how deep into the margin we are */
-                        let edgeDist = 0;
-                        for (let s = 1; s <= LOGO_MARGIN; s++) {
-                            if (isInsideLogo(p.x - ndx * s, p.y - ndy * s)) {
-                                edgeDist = LOGO_MARGIN - s;
-                                break;
-                            }
-                        }
-                        const fade = edgeDist / LOGO_MARGIN;
+                } else if (LOGO_MARGIN > 0 && lDistSq < logoMarginOuterRadiusSq) {
+                    /* Estimate margin depth with a coarse-to-fine lookup instead of per-pixel sampling */
+                    const fade = estimateLogoMarginFade(p.x, p.y, ndx, ndy);
+                    if (fade > 0) {
                         const force = LOGO_REPULSION * fade * fade;
                         p.vx += ndx * force;
                         p.vy += ndy * force;
@@ -595,11 +617,11 @@
                 p.vy *= FRICTION;
 
                 /* Clamp max speed so particles stay dust-like */
-                let speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-                if (speed > MAX_SPEED) {
+                const speedSq = p.vx * p.vx + p.vy * p.vy;
+                if (speedSq > MAX_SPEED * MAX_SPEED) {
+                    const speed = Math.sqrt(speedSq);
                     p.vx = (p.vx / speed) * MAX_SPEED;
                     p.vy = (p.vy / speed) * MAX_SPEED;
-                    speed = MAX_SPEED;
                 }
 
                 p.x += p.vx;
