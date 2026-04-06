@@ -83,6 +83,8 @@
         const OUTLINE_INFLUENCE_RADIUS_FRAC = 0.038; /* Partikkelien vaikutusetäisyys */
         const OUTLINE_ENERGY_SCALE = 2.4; /* Kuinka paljon yli odotetun paikallistiheyden vaaditaan */
         const OUTLINE_CONTRAST = 2.35; /* Kuinka jyrkästi kirkkauserot kasvavat */
+        const OUTLINE_STRAIGHT_EDGE_RATIO = 2.4; /* Milloin tangentti tulkitaan suoraksi reunaksi */
+        const OUTLINE_STRAIGHTEN_STRENGTH = 0.7; /* Kuinka vahvasti suoria reunoja oikaistaan */
         const OUTLINE_MIN_ALPHA = 0.02; /* Piirtoraja hyvin himmeille segmenteille */
 
         /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
@@ -99,6 +101,8 @@
         let outlinePoints = [];
         let outlineRadii = [];
         let outlineLevels = [];
+        let outlineEnergyBuffer = new Float32Array(0);
+        let outlineSmoothedBuffer = new Float32Array(0);
         let outlineMinRadius = 0;
         let outlineMaxRadius = 0;
 
@@ -143,6 +147,8 @@
                 outlinePoints = [];
                 outlineRadii = [];
                 outlineLevels = [];
+                outlineEnergyBuffer = new Float32Array(0);
+                outlineSmoothedBuffer = new Float32Array(0);
                 outlineMinRadius = 0;
                 outlineMaxRadius = 0;
                 return;
@@ -189,6 +195,8 @@
                 outlinePoints = [];
                 outlineRadii = [];
                 outlineLevels = [];
+                outlineEnergyBuffer = new Float32Array(0);
+                outlineSmoothedBuffer = new Float32Array(0);
                 outlineMinRadius = 0;
                 outlineMaxRadius = 0;
                 return;
@@ -235,13 +243,48 @@
                 });
             }
 
+            smoothed = smoothed.map(function (point, index, points) {
+                const prev2 = points[(index - 2 + points.length) % points.length];
+                const prev = points[(index - 1 + points.length) % points.length];
+                const next = points[(index + 1) % points.length];
+                const next2 = points[(index + 2) % points.length];
+                const tangentX = next2.x - prev2.x;
+                const tangentY = next2.y - prev2.y;
+                const absTangentX = Math.abs(tangentX);
+                const absTangentY = Math.abs(tangentY);
+
+                if (absTangentX > absTangentY * OUTLINE_STRAIGHT_EDGE_RATIO) {
+                    const targetY = (prev2.y + prev.y + point.y * 2 + next.y + next2.y) / 6;
+                    return {
+                        x: point.x,
+                        y:
+                            point.y * (1 - OUTLINE_STRAIGHTEN_STRENGTH) +
+                            targetY * OUTLINE_STRAIGHTEN_STRENGTH,
+                    };
+                }
+
+                if (absTangentY > absTangentX * OUTLINE_STRAIGHT_EDGE_RATIO) {
+                    const targetX = (prev2.x + prev.x + point.x * 2 + next.x + next2.x) / 6;
+                    return {
+                        x:
+                            point.x * (1 - OUTLINE_STRAIGHTEN_STRENGTH) +
+                            targetX * OUTLINE_STRAIGHTEN_STRENGTH,
+                        y: point.y,
+                    };
+                }
+
+                return point;
+            });
+
             outlinePoints = smoothed;
             outlineRadii = outlinePoints.map(function (point) {
                 const dx = point.x - isoCX;
                 const dy = point.y - isoCY;
                 return Math.sqrt(dx * dx + dy * dy);
             });
-            outlineLevels = new Array(outlinePoints.length).fill(0);
+            outlineLevels = new Float32Array(outlinePoints.length);
+            outlineEnergyBuffer = new Float32Array(outlinePoints.length);
+            outlineSmoothedBuffer = new Float32Array(outlinePoints.length);
             outlineMinRadius = Math.min.apply(null, outlineRadii);
             outlineMaxRadius = Math.max.apply(null, outlineRadii);
         }
@@ -257,7 +300,9 @@
             const expectedLocalEnergy =
                 Math.max(0.0001, (particleDensity * Math.PI * influenceRadiusSq) / 3) *
                 OUTLINE_ENERGY_SCALE;
-            const localLevels = new Array(outlinePoints.length).fill(0);
+            const localLevels = outlineEnergyBuffer;
+            const smoothedLevels = outlineSmoothedBuffer;
+            localLevels.fill(0);
             let peakLevel = 0;
 
             for (let i = 0; i < particles.length; i++) {
@@ -319,13 +364,13 @@
                 localLevels[i] = outlineLevels[i];
             }
 
-            const smoothedLevels = localLevels.map(function (level, index, levels) {
-                const prev = levels[(index - 1 + levels.length) % levels.length];
-                const next = levels[(index + 1) % levels.length];
-                const smoothedLevel = (prev + level * 2 + next) / 4;
+            for (let i = 0; i < localLevels.length; i++) {
+                const prev = localLevels[(i - 1 + localLevels.length) % localLevels.length];
+                const next = localLevels[(i + 1) % localLevels.length];
+                const smoothedLevel = (prev + localLevels[i] * 2 + next) / 4;
+                smoothedLevels[i] = smoothedLevel;
                 if (smoothedLevel > peakLevel) peakLevel = smoothedLevel;
-                return smoothedLevel;
-            });
+            }
 
             if (peakLevel < OUTLINE_MIN_ALPHA) return;
 
