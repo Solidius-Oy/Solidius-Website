@@ -757,6 +757,56 @@
         });
     });
 
+    /* ===== Product switcher ===== */
+    const productSwitchButtons = document.querySelectorAll(".product-switch-btn");
+    const productBlocks = document.querySelectorAll(".product-block[data-product]");
+
+    function productFromHash(hash) {
+        if (hash === "#flow") return "flow";
+        if (hash === "#erp") return "erp";
+        if (hash === "#shift") return "shift";
+        return null;
+    }
+
+    function setActiveProduct(product) {
+        productSwitchButtons.forEach(function (btn) {
+            const active = btn.getAttribute("data-product") === product;
+            btn.classList.toggle("active", active);
+            btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+
+        const currentLightbox = document.getElementById("lightbox");
+        if (product !== "shift" && currentLightbox && currentLightbox.classList.contains("open")) {
+            currentLightbox.classList.remove("open");
+            currentLightbox.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+        }
+
+        productBlocks.forEach(function (block) {
+            const active = block.getAttribute("data-product") === product;
+            block.classList.toggle("product-hidden", !active);
+            block.setAttribute("aria-hidden", active ? "false" : "true");
+        });
+    }
+
+    productSwitchButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            const product = btn.getAttribute("data-product") || "shift";
+            if (location.hash !== "#" + product) {
+                location.hash = product;
+            } else {
+                setActiveProduct(product);
+            }
+        });
+    });
+
+    window.addEventListener("hashchange", function () {
+        const product = productFromHash(window.location.hash);
+        if (product) setActiveProduct(product);
+    });
+
+    setActiveProduct(productFromHash(window.location.hash) || "shift");
+
     /* ===== Tabs (crossfade) ===== */
     const tabButtons = document.querySelectorAll(".tab-btn");
     const tabPanels = document.querySelectorAll(".tab-panel");
@@ -959,10 +1009,53 @@
     includeCalcInit.checked = false;
     document.getElementById("calcAttachPreview").style.display = "none";
 
+    const interestMap = {
+        shift: document.getElementById("interestShift"),
+        flow: document.getElementById("interestFlow"),
+        erp: document.getElementById("interestErp"),
+    };
+    const productInterestSummary = document.getElementById("productInterestSummary");
+
+    function syncInterestSummary() {
+        if (!productInterestSummary) return;
+        const values = Object.keys(interestMap)
+            .map(function (key) {
+                const checkbox = interestMap[key];
+                return checkbox && checkbox.checked ? checkbox.value : null;
+            })
+            .filter(Boolean);
+        productInterestSummary.value = values.join(", ");
+    }
+
+    function markProductInterest(productKey) {
+        const checkbox = interestMap[productKey];
+        if (!checkbox) return;
+        checkbox.checked = true;
+        syncInterestSummary();
+    }
+
+    Object.keys(interestMap).forEach(function (key) {
+        const checkbox = interestMap[key];
+        if (!checkbox) return;
+        checkbox.addEventListener("change", syncInterestSummary);
+    });
+
+    document.querySelectorAll(".js-product-contact").forEach(function (link) {
+        link.addEventListener("click", function (e) {
+            const interest = link.getAttribute("data-interest");
+            if (interest) markProductInterest(interest);
+            e.preventDefault();
+            document.getElementById("contactForm").scrollIntoView({ behavior: "smooth" });
+        });
+    });
+
+    syncInterestSummary();
+
     /* Kysy tarjous -nappi laskurissa */
     document.getElementById("calcQuoteBtn").addEventListener("click", function () {
         const checkbox = document.getElementById("includeCalc");
         checkbox.checked = true;
+        markProductInterest("shift");
         document.getElementById("calcAttachPreview").style.display = "block";
         document.getElementById("contactForm").scrollIntoView({ behavior: "smooth" });
     });
@@ -1052,6 +1145,7 @@
                 contactForm.reset();
                 includeCalc.checked = false;
                 document.getElementById("calcAttachPreview").style.display = "none";
+                syncInterestSummary();
                 setTimeout(function () {
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;

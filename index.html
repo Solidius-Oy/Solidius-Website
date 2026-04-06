@@ -159,7 +159,6 @@
                 </a>
                 <ul class="nav-links">
                     <li><a href="#tuotteet">Tuotteet</a></li>
-                    <li><a href="#ominaisuudet">Ominaisuudet</a></li>
                     <li><a href="#hinnoittelu">Hinnoittelu</a></li>
                     <li><a href="#yhteystiedot">Yhteystiedot</a></li>
                 </ul>
@@ -179,7 +178,6 @@
         <!-- ===== Mobile Menu ===== -->
         <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
             <a href="#tuotteet">Tuotteet</a>
-            <a href="#ominaisuudet">Ominaisuudet</a>
             <a href="#hinnoittelu">Hinnoittelu</a>
             <a href="#yhteystiedot">Yhteystiedot</a>
         </div>
@@ -264,12 +262,63 @@
                 </div>
             </section>
 
+            <section class="section-products-switch" id="tuotteet">
+                <div class="container">
+                    <div class="products-switch-header fade-in">
+                        <span class="section-label">Tuotteet</span>
+                        <h2 class="section-title">Valitse tuote</h2>
+                    </div>
+                    <div class="product-switcher fade-in fade-in-delay-1" role="tablist">
+                        <button
+                            class="product-switch-btn active"
+                            id="product-tab-shift"
+                            type="button"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="shift"
+                            data-product="shift"
+                        >
+                            Solidius Shift
+                        </button>
+                        <button
+                            class="product-switch-btn"
+                            id="product-tab-flow"
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="flow"
+                            data-product="flow"
+                        >
+                            Solidius Flow
+                        </button>
+                        <button
+                            class="product-switch-btn"
+                            id="product-tab-erp"
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="erp"
+                            data-product="erp"
+                        >
+                            ERP (tulossa)
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             <!-- Solidius Shift -->
-            <section class="section-shift" id="tuotteet">
+            <section
+                class="section-shift product-block"
+                id="shift"
+                role="tabpanel"
+                data-product="shift"
+            >
                 <div class="container">
                     <div class="shift-header">
-                        <span class="section-label fade-in">Tuotteet</span>
-                        <h2 class="section-title fade-in fade-in-delay-1">Solidius Shift</h2>
+                        <span class="section-label fade-in">Solidius Shift</span>
+                        <h2 class="section-title fade-in fade-in-delay-1">
+                            Työajanhallinta ja suunnittelu
+                        </h2>
                         <p class="shift-tagline fade-in fade-in-delay-2">
                             Kaikki työajanhallinta yhdessä paikassa
                         </p>
@@ -422,7 +471,12 @@
             </section>
 
             <!-- Screenshots -->
-            <section class="section-screenshots" id="nakymat">
+            <section
+                class="section-screenshots product-block"
+                id="nakymat"
+                role="tabpanel"
+                data-product="shift"
+            >
                 <div class="container">
                     <div class="screenshots-header">
                         <span class="section-label fade-in">Näkymät</span>
@@ -575,7 +629,12 @@
 
             <!-- Pricing -->
             <!-- Pricing -->
-            <section class="section-pricing" id="hinnoittelu">
+            <section
+                class="section-pricing product-block"
+                id="hinnoittelu"
+                role="tabpanel"
+                data-product="shift"
+            >
                 <div class="container">
                     <div class="pricing-header">
                         <span class="section-label fade-in">Hinnoittelu</span>
@@ -688,10 +747,236 @@
                                     10 hlö × 3,90 € = 39 €
                                 </div>
                             </div>
-                            <button type="button" class="calc-quote-btn" id="calcQuoteBtn">
+                            <button
+                                type="button"
+                                class="calc-quote-btn"
+                                id="calcQuoteBtn"
+                                data-interest="shift"
+                            >
                                 Kysy tarjous
                             </button>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="section-shift section-shift--flow product-block product-hidden"
+                id="flow"
+                role="tabpanel"
+                data-product="flow"
+                aria-hidden="true"
+            >
+                <div class="container">
+                    <div class="shift-header">
+                        <span class="section-label fade-in">Solidius Flow</span>
+                        <h2 class="section-title fade-in fade-in-delay-1">
+                            Tuotannon suunnittelu- ja ohjausjärjestelmä
+                        </h2>
+                        <p class="shift-tagline fade-in fade-in-delay-2">
+                            Hallit, koneet, tilaukset ja työvaiheet yhdessä näkymässä
+                        </p>
+                        <p class="section-subtitle fade-in fade-in-delay-3">
+                            Solidius Flow on teollisuusyrityksille suunnattu selainpohjainen
+                            järjestelmä tuotannon suunnitteluun ja kuormituksen hallintaan. Se
+                            täydentää olemassa olevaa tuotannonohjausta ilman, että olemassa olevan
+                            järjestelmän ydintä tarvitsee korvata.
+                        </p>
+                    </div>
+
+                    <div class="features-grid">
+                        <div class="feature-card fade-in">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <line x1="18" y1="20" x2="18" y2="10" />
+                                    <line x1="12" y1="20" x2="12" y2="4" />
+                                    <line x1="6" y1="20" x2="6" y2="14" />
+                                </svg>
+                            </div>
+                            <h3>Yksi näkymä tuotantoon</h3>
+                            <p>
+                                Kokoaa hallit, koneet, tilaukset ja työvaiheet samaan selainnäkymään
+                                työntekijöiden sekä työnjohdon käyttöön.
+                            </p>
+                        </div>
+
+                        <div class="feature-card fade-in fade-in-delay-1">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <polyline points="16 3 21 3 21 8" />
+                                    <line x1="4" y1="20" x2="21" y2="3" />
+                                    <polyline points="21 16 21 21 16 21" />
+                                    <line x1="15" y1="15" x2="21" y2="21" />
+                                    <line x1="4" y1="4" x2="9" y2="9" />
+                                </svg>
+                            </div>
+                            <h3>Luonnostila ennen julkaisua</h3>
+                            <p>
+                                Muutoksia voi valmistella luonnoksena ilman, että olemassa oleva
+                                tuotantotila muuttuu kesken suunnittelun.
+                            </p>
+                        </div>
+
+                        <div class="feature-card fade-in fade-in-delay-2">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                                    />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </div>
+                            <h3>Julkaisu ja tilannekuva</h3>
+                            <p>
+                                Julkaistut muutokset näkyvät käyttäjille välittömästi, jolloin
+                                tuotannon tilannetta voi seurata ilman manuaalista päivitystä.
+                            </p>
+                        </div>
+
+                        <div class="feature-card fade-in fade-in-delay-3">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                            </div>
+                            <h3>Roolit ja oikeudet</h3>
+                            <p>
+                                Tukee roolipohjaista käyttöoikeuksien hallintaa ja hienojakoisempaa
+                                oikeusmatriisia ylläpidon tarpeisiin.
+                            </p>
+                        </div>
+
+                        <div class="feature-card fade-in fade-in-delay-4">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M3 7h18" />
+                                    <path d="M3 12h18" />
+                                    <path d="M3 17h18" />
+                                </svg>
+                            </div>
+                            <h3>Nykyisen järjestelmän rinnalle</h3>
+                            <p>
+                                Rakennettu laajentamaan nykyistä tuotannonohjausta, ei korvaamaan
+                                sitä yhdellä suurella järjestelmäuudistuksella.
+                            </p>
+                        </div>
+
+                        <div class="feature-card fade-in fade-in-delay-5">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M8 12h8" />
+                                    <path d="M12 8v8" />
+                                </svg>
+                            </div>
+                            <h3>Yhteinen suunnittelutyö</h3>
+                            <p>
+                                Useat käyttäjät voivat osallistua suunnitteluun samaan aikaan,
+                                jolloin muutokset pysyvät hallittuina.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flow-pricing-card fade-in fade-in-delay-3">
+                        <span class="flow-price-row">
+                            <span class="flow-price">290 €</span>
+                            <span class="flow-price-period">/ kk</span>
+                        </span>
+                        <p class="flow-price-vat">alv 0 %</p>
+                        <h3>C9000-järjestelmän lisäosa</h3>
+                        <p>
+                            Solidius Flow on C9000-järjestelmän lisäosa, joka toimii asiakkaan
+                            omissa tiloissa ja omassa verkossa. Ratkaisu on suunniteltu
+                            integroitumaan nykyiseen ympäristöön siten, että data pysyy asiakkaalla.
+                        </p>
+                        <a
+                            href="#yhteystiedot"
+                            class="flow-cta js-product-contact"
+                            data-interest="flow"
+                            >Ota yhteyttä</a
+                        >
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="section-shift section-shift--erp product-block product-hidden"
+                id="erp"
+                role="tabpanel"
+                data-product="erp"
+                aria-hidden="true"
+            >
+                <div class="container">
+                    <div class="shift-header">
+                        <span class="section-label fade-in">ERP (tulossa)</span>
+                        <h2 class="section-title fade-in fade-in-delay-1">Solidius ERP</h2>
+                        <p class="shift-tagline fade-in fade-in-delay-2">
+                            Tuotannon, resurssien ja talouden ohjaus samaan kokonaisuuteen
+                        </p>
+                        <p class="section-subtitle fade-in fade-in-delay-3">
+                            Solidius ERP on pitkällä kehityksessä. Pyydämme yrityksiä osallistumaan
+                            pilottitesteihin.
+                        </p>
+                    </div>
+
+                    <div class="erp-teaser fade-in fade-in-delay-3">
+                        <h3>Tulossa seuraavaksi</h3>
+                        <p>
+                            Haluatko ensimmäisten joukossa olla kokeilemassa ERP-järjestelmää? Ota
+                            yhteyttä.
+                        </p>
+                        <a
+                            href="#yhteystiedot"
+                            class="flow-cta js-product-contact"
+                            data-interest="erp"
+                            >Kysy ennakkotietoa</a
+                        >
                     </div>
                 </div>
             </section>
@@ -809,6 +1094,19 @@
                                 ></div>
                             </div>
                             <div class="form-group">
+                                <label for="contact-company"
+                                    >Yrityksen nimi
+                                    <span class="form-optional">(valinnainen)</span></label
+                                >
+                                <input
+                                    type="text"
+                                    id="contact-company"
+                                    name="company"
+                                    placeholder="Yrityksesi nimi"
+                                    autocomplete="organization"
+                                />
+                            </div>
+                            <div class="form-group">
                                 <label for="contact-email">Sähköposti</label>
                                 <input
                                     type="email"
@@ -853,14 +1151,50 @@
                                     aria-live="polite"
                                 ></div>
                             </div>
-                            <div class="form-calc-attach" id="calcAttachGroup">
-                                <label class="calc-attach-label">
-                                    <input type="checkbox" id="includeCalc" />
-                                    <span>Liitä laskurin arvio viestiin</span>
-                                </label>
+                            <div class="form-product-interest" id="productInterestGroup">
+                                <div class="form-product-interest-label">Kiinnostuksen kohde</div>
+                                <div class="form-product-interest-options">
+                                    <label class="form-product-interest-option">
+                                        <input
+                                            type="checkbox"
+                                            id="interestShift"
+                                            value="Solidius Shift"
+                                        />
+                                        <span>Shift</span>
+                                    </label>
+                                    <label class="form-product-interest-option">
+                                        <input
+                                            type="checkbox"
+                                            id="interestFlow"
+                                            value="Solidius Flow"
+                                        />
+                                        <span>Flow</span>
+                                    </label>
+                                    <label class="form-product-interest-option">
+                                        <input
+                                            type="checkbox"
+                                            id="interestErp"
+                                            value="Solidius ERP"
+                                        />
+                                        <span>ERP</span>
+                                    </label>
+                                    <label
+                                        class="form-product-interest-option"
+                                        id="calcAttachGroup"
+                                    >
+                                        <input type="checkbox" id="includeCalc" />
+                                        <span>Liitä arvio</span>
+                                    </label>
+                                </div>
                                 <div class="calc-attach-preview" id="calcAttachPreview">
                                     <span id="calcSummaryText"></span>
                                 </div>
+                                <input
+                                    type="hidden"
+                                    id="productInterestSummary"
+                                    name="Kiinnostuksen_kohteet"
+                                    value=""
+                                />
                             </div>
                             <div
                                 class="form-message"
