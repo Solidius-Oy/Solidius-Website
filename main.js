@@ -80,9 +80,8 @@
         const OUTLINE_WIDTH = 1.45; /* Outlinen peruspaksuus (px) */
         const OUTLINE_BLUR = 7; /* Pehmeän hehkun määrä */
         const OUTLINE_INFLUENCE_RADIUS_FRAC = 0.038; /* Partikkelien vaikutusetäisyys */
-        const OUTLINE_ENERGY_SCALE = 2.4; /* Kuinka nopeasti paikallinen energia saturoituu */
+        const OUTLINE_ENERGY_SCALE = 2.4; /* Kuinka paljon yli odotetun paikallistiheyden vaaditaan */
         const OUTLINE_CONTRAST = 2.35; /* Kuinka jyrkästi kirkkauserot kasvavat */
-        const OUTLINE_PARTICLE_LOAD_BASE = 240; /* Vertailutaso kokonaispartikkelimäärälle */
         const OUTLINE_MIN_ALPHA = 0.02; /* Piirtoraja hyvin himmeille segmenteille */
 
         /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
@@ -253,7 +252,10 @@
             if (outlinePoints.length < 2) return;
 
             const influenceRadiusSq = OUTLINE_INFLUENCE_RADIUS * OUTLINE_INFLUENCE_RADIUS;
-            const particleLoadFactor = Math.max(1, PARTICLE_COUNT / OUTLINE_PARTICLE_LOAD_BASE);
+            const particleDensity = particles.length / Math.max(1, w * h);
+            const expectedLocalEnergy =
+                Math.max(0.0001, (particleDensity * Math.PI * influenceRadiusSq) / 3) *
+                OUTLINE_ENERGY_SCALE;
             const localLevels = new Array(outlinePoints.length).fill(0);
             let peakLevel = 0;
 
@@ -299,10 +301,7 @@
             }
 
             for (let i = 0; i < outlinePoints.length; i++) {
-                const normalized = Math.min(
-                    1,
-                    localLevels[i] / (OUTLINE_ENERGY_SCALE * particleLoadFactor),
-                );
+                const normalized = Math.min(1, localLevels[i] / expectedLocalEnergy);
                 const targetLevel =
                     normalized > OUTLINE_THRESHOLD
                         ? Math.pow(
