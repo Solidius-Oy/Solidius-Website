@@ -1390,6 +1390,32 @@ input[type="range"].calc-range::-moz-range-thumb {
     line-height: 1.5;
 }
 
+/* ===== Section: Privacy ===== */
+.section-privacy {
+    background: var(--color-bg-dark);
+    padding: 8px 0 40px;
+}
+
+.privacy-note {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.privacy-note p {
+    color: #71717a;
+    font-size: 0.8rem;
+    line-height: 1.7;
+}
+
+.privacy-note a {
+    color: #a1a1aa;
+}
+
+.privacy-note a:hover {
+    color: var(--color-text-light);
+}
+
 /* ===== Footer ===== */
 .footer {
     background: var(--color-bg-dark);
@@ -1452,6 +1478,10 @@ input[type="range"].calc-range::-moz-range-thumb {
     .section-pricing,
     .section-contact {
         padding: 80px 0;
+    }
+
+    .section-privacy {
+        padding-bottom: 32px;
     }
 
     .features-grid {
@@ -1520,6 +1550,10 @@ input[type="range"].calc-range::-moz-range-thumb {
     .section-pricing,
     .section-contact {
         padding: 64px 0;
+    }
+
+    .section-privacy {
+        padding-bottom: 28px;
     }
 
     .hero-logo {
