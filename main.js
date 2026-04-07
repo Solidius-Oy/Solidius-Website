@@ -47,7 +47,7 @@
         const COLOR_B = 255;
 
         /* Partikkelien kirkkaus & koko */
-        const PARTICLE_DENSITY = 0.00015; /* Partikkeleita per neliöpikseli */
+        const PARTICLE_DENSITY = 0.00025; /* Partikkeleita per neliöpikseli */
         const PARTICLE_COUNT = Math.round(
             Math.max(30, Math.min(400, window.innerWidth * window.innerHeight * PARTICLE_DENSITY)),
         );
@@ -69,7 +69,7 @@
         const FRICTION = 0.98; /* Kitka (0.9–0.99, suurempi = liukkaampi) */
         const LOGO_REPULSION = 1.5; /* Logon hylkimisvoima — pitää partikkelit poissa logosta */
         const LOGO_MARGIN = 25; /* Tyhjä väli logon ympärillä (px) — kapea, siisti reuna */
-        const LOGO_MARGIN_SAMPLE_STEP = 4; /* Kuinka harvasti margin-alue tarkistetaan */
+        const LOGO_MARGIN_SAMPLE_STEP = 10; /* Kuinka harvasti margin-alue tarkistetaan */
         const LOGO_ATTRACT = 0.035; /* Logon vetovoima — vetää partikkelit "kiertoradalle" */
         const LOGO_ATTRACT_RADIUS_FRAC = 0.15; /* Vetovoiman kantama (osuus näytön lävistäjästä) */
 
@@ -86,6 +86,8 @@
         const OUTLINE_STRAIGHT_EDGE_RATIO = 2.4; /* Milloin tangentti tulkitaan suoraksi reunaksi */
         const OUTLINE_STRAIGHTEN_STRENGTH = 0.7; /* Kuinka vahvasti suoria reunoja oikaistaan */
         const OUTLINE_MIN_ALPHA = 0.02; /* Piirtoraja hyvin himmeille segmenteille */
+        const OUTLINE_ENERGY_BINS = 72; /* Kuinka karkeasti partikkelien energia kerätään kulmittain */
+        const OUTLINE_FRAME_INTERVAL = 3; /* Kuinka usein outline päivitetään suhteessa partikkeliruutuihin */
 
         /* Dynaamiset arvot — lasketaan uudelleen resize():ssä */
         let MOUSE_RADIUS = 180;
@@ -100,9 +102,15 @@
         let w, h;
         let outlinePoints = [];
         let outlineRadii = [];
+        let outlineAngles = [];
+        let outlineSegmentBins = [];
+        let outlineRadiusByBin = new Float32Array(0);
         let outlineLevels = [];
         let outlineEnergyBuffer = new Float32Array(0);
         let outlineSmoothedBuffer = new Float32Array(0);
+        let outlineBinLevels = new Float32Array(0);
+        let outlineBinEnergyBuffer = new Float32Array(0);
+        let outlineBinSmoothedBuffer = new Float32Array(0);
         let outlineMinRadius = 0;
         let outlineMaxRadius = 0;
 
@@ -120,6 +128,14 @@
             isoRy = 0,
             isoW = 0,
             isoH = 0; /* Isotypen mitat hero-koordinaateissa */
+        let logoHitMinX = 0,
+            logoHitMaxX = 0,
+            logoHitMinY = 0,
+            logoHitMaxY = 0;
+        let logoMarginMinX = 0,
+            logoMarginMaxX = 0,
+            logoMarginMinY = 0,
+            logoMarginMaxY = 0;
 
         const maskSvgTemplateEl = document.getElementById("heroIsotypeMaskTemplate");
         const maskImg = new Image();
@@ -146,9 +162,15 @@
             if (!maskData || !logoW || !logoH) {
                 outlinePoints = [];
                 outlineRadii = [];
+                outlineAngles = [];
+                outlineSegmentBins = [];
+                outlineRadiusByBin = new Float32Array(0);
                 outlineLevels = [];
                 outlineEnergyBuffer = new Float32Array(0);
                 outlineSmoothedBuffer = new Float32Array(0);
+                outlineBinLevels = new Float32Array(0);
+                outlineBinEnergyBuffer = new Float32Array(0);
+                outlineBinSmoothedBuffer = new Float32Array(0);
                 outlineMinRadius = 0;
                 outlineMaxRadius = 0;
                 return;
@@ -194,9 +216,15 @@
             if (firstIndex === -1) {
                 outlinePoints = [];
                 outlineRadii = [];
+                outlineAngles = [];
+                outlineSegmentBins = [];
+                outlineRadiusByBin = new Float32Array(0);
                 outlineLevels = [];
                 outlineEnergyBuffer = new Float32Array(0);
                 outlineSmoothedBuffer = new Float32Array(0);
+                outlineBinLevels = new Float32Array(0);
+                outlineBinEnergyBuffer = new Float32Array(0);
+                outlineBinSmoothedBuffer = new Float32Array(0);
                 outlineMinRadius = 0;
                 outlineMaxRadius = 0;
                 return;
@@ -282,9 +310,58 @@
                 const dy = point.y - isoCY;
                 return Math.sqrt(dx * dx + dy * dy);
             });
+            outlineAngles = outlinePoints.map(function (point) {
+                let angle = Math.atan2(point.y - isoCY, point.x - isoCX);
+                if (angle < 0) angle += TAU;
+                return angle;
+            });
+            outlineSegmentBins = outlineAngles.map(function (angle) {
+                return Math.floor((angle / TAU) * OUTLINE_ENERGY_BINS) % OUTLINE_ENERGY_BINS;
+            });
             outlineLevels = new Float32Array(outlinePoints.length);
             outlineEnergyBuffer = new Float32Array(outlinePoints.length);
             outlineSmoothedBuffer = new Float32Array(outlinePoints.length);
+            outlineBinLevels = new Float32Array(OUTLINE_ENERGY_BINS);
+            outlineBinEnergyBuffer = new Float32Array(OUTLINE_ENERGY_BINS);
+            outlineBinSmoothedBuffer = new Float32Array(OUTLINE_ENERGY_BINS);
+            outlineRadiusByBin = new Float32Array(OUTLINE_ENERGY_BINS);
+
+            const binCounts = new Uint16Array(OUTLINE_ENERGY_BINS);
+            for (let i = 0; i < outlineRadii.length; i++) {
+                const binIndex = outlineSegmentBins[i];
+                outlineRadiusByBin[binIndex] += outlineRadii[i];
+                binCounts[binIndex]++;
+            }
+
+            for (let i = 0; i < OUTLINE_ENERGY_BINS; i++) {
+                if (binCounts[i] > 0) {
+                    outlineRadiusByBin[i] /= binCounts[i];
+                }
+            }
+
+            for (let i = 0; i < OUTLINE_ENERGY_BINS; i++) {
+                if (outlineRadiusByBin[i] > 0) continue;
+
+                let prevIndex = (i - 1 + OUTLINE_ENERGY_BINS) % OUTLINE_ENERGY_BINS;
+                while (prevIndex !== i && outlineRadiusByBin[prevIndex] === 0) {
+                    prevIndex = (prevIndex - 1 + OUTLINE_ENERGY_BINS) % OUTLINE_ENERGY_BINS;
+                }
+
+                let nextIndex = (i + 1) % OUTLINE_ENERGY_BINS;
+                while (nextIndex !== i && outlineRadiusByBin[nextIndex] === 0) {
+                    nextIndex = (nextIndex + 1) % OUTLINE_ENERGY_BINS;
+                }
+
+                if (outlineRadiusByBin[prevIndex] > 0 && outlineRadiusByBin[nextIndex] > 0) {
+                    outlineRadiusByBin[i] =
+                        (outlineRadiusByBin[prevIndex] + outlineRadiusByBin[nextIndex]) * 0.5;
+                } else if (outlineRadiusByBin[prevIndex] > 0) {
+                    outlineRadiusByBin[i] = outlineRadiusByBin[prevIndex];
+                } else if (outlineRadiusByBin[nextIndex] > 0) {
+                    outlineRadiusByBin[i] = outlineRadiusByBin[nextIndex];
+                }
+            }
+
             outlineMinRadius = Math.min.apply(null, outlineRadii);
             outlineMaxRadius = Math.max.apply(null, outlineRadii);
         }
@@ -295,73 +372,78 @@
             outlineCtx.clearRect(0, 0, w, h);
             if (outlinePoints.length < 2) return;
 
-            const influenceRadiusSq = OUTLINE_INFLUENCE_RADIUS * OUTLINE_INFLUENCE_RADIUS;
-            const particleDensity = particles.length / Math.max(1, w * h);
-            const expectedLocalEnergy =
-                Math.max(0.0001, (particleDensity * Math.PI * influenceRadiusSq) / 3) *
-                OUTLINE_ENERGY_SCALE;
+            const ringHalfWidth = OUTLINE_INFLUENCE_RADIUS;
+            const minRingRadius = outlineMinRadius - ringHalfWidth;
+            const maxRingRadius = outlineMaxRadius + ringHalfWidth;
+            const minRingRadiusSq = minRingRadius * minRingRadius;
+            const maxRingRadiusSq = maxRingRadius * maxRingRadius;
             const localLevels = outlineEnergyBuffer;
             const smoothedLevels = outlineSmoothedBuffer;
-            localLevels.fill(0);
+            const binLevels = outlineBinEnergyBuffer;
+            const smoothedBins = outlineBinSmoothedBuffer;
+            const avgParticlesPerBin = Math.max(1, particles.length / OUTLINE_ENERGY_BINS);
+            const expectedLocalEnergy =
+                Math.max(0.18, avgParticlesPerBin * 0.12) * OUTLINE_ENERGY_SCALE;
+
+            binLevels.fill(0);
             let peakLevel = 0;
 
             for (let i = 0; i < particles.length; i++) {
                 const particle = particles[i];
                 const centerDx = particle.x - isoCX;
                 const centerDy = particle.y - isoCY;
-                const centerDist = Math.sqrt(centerDx * centerDx + centerDy * centerDy);
+                const centerDistSq = centerDx * centerDx + centerDy * centerDy;
 
-                if (
-                    centerDist < outlineMinRadius - OUTLINE_INFLUENCE_RADIUS ||
-                    centerDist > outlineMaxRadius + OUTLINE_INFLUENCE_RADIUS
-                ) {
+                if (centerDistSq < minRingRadiusSq || centerDistSq > maxRingRadiusSq) {
                     continue;
                 }
 
+                const centerDist = Math.sqrt(centerDistSq);
                 let angle = Math.atan2(centerDy, centerDx);
                 if (angle < 0) angle += TAU;
+                const binFloat = (angle / TAU) * OUTLINE_ENERGY_BINS;
+                const baseBin = Math.floor(binFloat) % OUTLINE_ENERGY_BINS;
+                const nextBin = (baseBin + 1) % OUTLINE_ENERGY_BINS;
+                const binMix = binFloat - Math.floor(binFloat);
+                const prevBin = (baseBin - 1 + OUTLINE_ENERGY_BINS) % OUTLINE_ENERGY_BINS;
+                const expectedRadius =
+                    (outlineRadiusByBin[baseBin] || centerDist) * 0.55 +
+                    (outlineRadiusByBin[nextBin] || centerDist) * 0.25 +
+                    (outlineRadiusByBin[prevBin] || centerDist) * 0.2;
+                const radialDelta = Math.abs(centerDist - expectedRadius);
+                if (radialDelta >= ringHalfWidth) continue;
 
-                const centerIndex =
-                    Math.floor((angle / TAU) * outlinePoints.length) % outlinePoints.length;
-                const safeCenterDist = Math.max(centerDist, OUTLINE_INFLUENCE_RADIUS);
-                const angularReach = Math.asin(
-                    Math.min(0.999, OUTLINE_INFLUENCE_RADIUS / safeCenterDist),
-                );
-                const segmentReach = Math.max(
-                    1,
-                    Math.ceil((angularReach / TAU) * outlinePoints.length) + 1,
-                );
+                const radialWeight = 1 - radialDelta / ringHalfWidth;
+                const energy = radialWeight * radialWeight;
+                binLevels[baseBin] += energy * (1 - binMix);
+                binLevels[nextBin] += energy * binMix;
+                binLevels[prevBin] += energy * 0.2 * (1 - binMix);
+                binLevels[(nextBin + 1) % OUTLINE_ENERGY_BINS] += energy * 0.12 * binMix;
+            }
 
-                for (let offset = -segmentReach; offset <= segmentReach; offset++) {
-                    const index =
-                        (centerIndex + offset + outlinePoints.length) % outlinePoints.length;
-                    const point = outlinePoints[index];
-                    const dx = particle.x - point.x;
-                    const dy = particle.y - point.y;
-                    const distSq = dx * dx + dy * dy;
-                    if (distSq >= influenceRadiusSq) continue;
+            for (let i = 0; i < binLevels.length; i++) {
+                const prev = binLevels[(i - 1 + binLevels.length) % binLevels.length];
+                const next = binLevels[(i + 1) % binLevels.length];
+                smoothedBins[i] = (prev + binLevels[i] * 2 + next) * 0.25;
+            }
 
-                    const dist = Math.sqrt(distSq);
-                    localLevels[index] += 1 - dist / OUTLINE_INFLUENCE_RADIUS;
-                }
+            for (let i = 0; i < smoothedBins.length; i++) {
+                const normalized = Math.min(1, smoothedBins[i] / expectedLocalEnergy);
+                const boosted = Math.min(1, normalized * 1.35);
+                const targetLevel = Math.pow(boosted, Math.max(1.15, OUTLINE_CONTRAST - 1));
+
+                outlineBinLevels[i] += (targetLevel - outlineBinLevels[i]) * OUTLINE_SMOOTHING;
+                if (outlineBinLevels[i] < 0.005) outlineBinLevels[i] = 0;
             }
 
             for (let i = 0; i < outlinePoints.length; i++) {
-                const normalized = Math.min(1, localLevels[i] / expectedLocalEnergy);
-                const targetLevel =
-                    normalized > OUTLINE_THRESHOLD
-                        ? Math.pow(
-                              Math.min(
-                                  1,
-                                  (normalized - OUTLINE_THRESHOLD) / (1 - OUTLINE_THRESHOLD),
-                              ),
-                              OUTLINE_CONTRAST,
-                          )
-                        : 0;
-
-                outlineLevels[i] += (targetLevel - outlineLevels[i]) * OUTLINE_SMOOTHING;
-                if (outlineLevels[i] < 0.005) outlineLevels[i] = 0;
-                localLevels[i] = outlineLevels[i];
+                const baseBin = outlineSegmentBins[i];
+                const prevBin = (baseBin - 1 + OUTLINE_ENERGY_BINS) % OUTLINE_ENERGY_BINS;
+                const nextBin = (baseBin + 1) % OUTLINE_ENERGY_BINS;
+                localLevels[i] =
+                    outlineBinLevels[baseBin] * 0.6 +
+                    outlineBinLevels[prevBin] * 0.2 +
+                    outlineBinLevels[nextBin] * 0.2;
             }
 
             for (let i = 0; i < localLevels.length; i++) {
@@ -498,6 +580,14 @@
             isoRy = logoOffY + ry;
             isoW = iw;
             isoH = ih;
+            logoHitMinX = isoRx;
+            logoHitMaxX = isoRx + isoW;
+            logoHitMinY = isoRy;
+            logoHitMaxY = isoRy + isoH;
+            logoMarginMinX = logoHitMinX - LOGO_MARGIN;
+            logoMarginMaxX = logoHitMaxX + LOGO_MARGIN;
+            logoMarginMinY = logoHitMinY - LOGO_MARGIN;
+            logoMarginMaxY = logoHitMaxY + LOGO_MARGIN;
 
             if (maskReady) {
                 maskCtx.drawImage(maskImg, rx, ry, iw, ih);
@@ -535,16 +625,7 @@
 
             if (!coarseHit) return 0;
 
-            const start = Math.max(1, coarseHit - coarseStep + 1);
-            let hitStep = coarseHit;
-            for (let s = start; s <= coarseHit; s++) {
-                if (isInsideLogo(px - ndx * s, py - ndy * s)) {
-                    hitStep = s;
-                    break;
-                }
-            }
-
-            return (LOGO_MARGIN - hitStep) / LOGO_MARGIN;
+            return (LOGO_MARGIN - coarseHit) / LOGO_MARGIN;
         }
 
         function rgba(a) {
@@ -599,6 +680,7 @@
         }
 
         let tick = 0;
+        let outlineFrameTick = 0;
 
         function draw() {
             ctx.clearRect(0, 0, w, h);
@@ -631,17 +713,36 @@
                 const ldx = p.x - isoCX;
                 const ldy = p.y - isoCY;
                 const lDistSq = ldx * ldx + ldy * ldy;
-                const lDist = Math.sqrt(lDistSq) || 1;
-                const ndx = ldx / lDist;
-                const ndy = ldy / lDist;
-                const insideLogo = isInsideLogo(p.x, p.y);
+                const inAttractRange = lDistSq < logoAttractRadiusSq;
+                const inMarginRange = LOGO_MARGIN > 0 && lDistSq < logoMarginOuterRadiusSq;
+                const inLogoHitBox =
+                    p.x >= logoHitMinX &&
+                    p.x <= logoHitMaxX &&
+                    p.y >= logoHitMinY &&
+                    p.y <= logoHitMaxY;
+                const inLogoMarginBox =
+                    p.x >= logoMarginMinX &&
+                    p.x <= logoMarginMaxX &&
+                    p.y >= logoMarginMinY &&
+                    p.y <= logoMarginMaxY;
+
+                let lDist = 1;
+                let ndx = 0;
+                let ndy = 0;
+                if (inAttractRange || inMarginRange || inLogoHitBox) {
+                    lDist = Math.sqrt(lDistSq) || 1;
+                    ndx = ldx / lDist;
+                    ndy = ldy / lDist;
+                }
+
+                const insideLogo = inLogoHitBox ? isInsideLogo(p.x, p.y) : false;
 
                 if (insideLogo) {
                     /* Inside logo — full push out */
                     p.vx += ndx * LOGO_REPULSION;
                     p.vy += ndy * LOGO_REPULSION;
-                } else if (LOGO_MARGIN > 0 && lDistSq < logoMarginOuterRadiusSq) {
-                    /* Estimate margin depth with a coarse-to-fine lookup instead of per-pixel sampling */
+                } else if (inMarginRange && inLogoMarginBox) {
+                    /* Estimate margin depth only near the actual logo bounds */
                     const fade = estimateLogoMarginFade(p.x, p.y, ndx, ndy);
                     if (fade > 0) {
                         const force = LOGO_REPULSION * fade * fade;
@@ -651,7 +752,7 @@
                 }
 
                 /* Gentle gravity pull toward logo from distance */
-                if (!insideLogo && lDist > LOGO_MARGIN && lDistSq < logoAttractRadiusSq) {
+                if (!insideLogo && inAttractRange && lDist > LOGO_MARGIN) {
                     const attractFade = 1 - lDist / LOGO_ATTRACT_RADIUS;
                     p.vx -= ndx * LOGO_ATTRACT * attractFade;
                     p.vy -= ndy * LOGO_ATTRACT * attractFade;
@@ -686,7 +787,10 @@
                 ctx.fill();
             }
 
-            drawOutline();
+            outlineFrameTick = (outlineFrameTick + 1) % OUTLINE_FRAME_INTERVAL;
+            if (outlineFrameTick === 0) {
+                drawOutline();
+            }
 
             /* Faint connection lines between nearby particles */
             if (LINE_OPACITY > 0) {
@@ -757,6 +861,7 @@
         resize();
         createParticles();
         buildLogoMask();
+        drawOutline();
         animId = requestAnimationFrame(draw);
 
         window.addEventListener(
@@ -773,6 +878,8 @@
                     particles[i].y *= scaleY;
                 }
                 buildLogoMask();
+                outlineFrameTick = 0;
+                drawOutline();
             },
             { passive: true },
         );
