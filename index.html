@@ -191,6 +191,46 @@
         <section class="hero" id="hero" aria-label="Etusivu">
             <canvas class="hero-particles" id="heroParticles" aria-hidden="true"></canvas>
             <canvas class="hero-outline" id="heroOutline" aria-hidden="true"></canvas>
+            <div class="hero-debug-panel" id="heroDebugPanel" aria-label="Animaation testipaneeli">
+                <div class="hero-debug-header">
+                    <span class="hero-debug-title">Testipaneeli</span>
+                    <span class="hero-debug-fps" id="heroFps">FPS --</span>
+                </div>
+                <div class="hero-debug-buttons">
+                    <button
+                        class="hero-debug-btn active"
+                        id="toggleOutline"
+                        type="button"
+                        aria-pressed="true"
+                    >
+                        Reunaviiva
+                    </button>
+                    <button
+                        class="hero-debug-btn active"
+                        id="toggleMouseForce"
+                        type="button"
+                        aria-pressed="true"
+                    >
+                        Hiirivoima
+                    </button>
+                    <button
+                        class="hero-debug-btn"
+                        id="toggleParticleDrawQuality"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Huipputarkkuus
+                    </button>
+                    <button
+                        class="hero-debug-btn"
+                        id="toggleOutlineFiveFrame"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Outline /5
+                    </button>
+                </div>
+            </div>
             <svg
                 viewBox="55.609986 96.100014 360.06042 213.1766"
                 xmlns="http://www.w3.org/2000/svg"

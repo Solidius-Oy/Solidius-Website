@@ -272,6 +272,71 @@ section {
     pointer-events: none;
 }
 
+.hero-debug-panel {
+    display: none;
+}
+
+.hero-debug-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.hero-debug-title,
+.hero-debug-fps {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hero-debug-title {
+    color: rgba(241, 245, 249, 0.92);
+}
+
+.hero-debug-fps {
+    color: rgba(148, 163, 184, 0.95);
+}
+
+.hero-debug-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hero-debug-btn {
+    min-height: 34px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(226, 232, 240, 0.84);
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition:
+        background var(--transition),
+        color var(--transition),
+        border-color var(--transition),
+        transform var(--transition);
+}
+
+.hero-debug-btn:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.hero-debug-btn.active {
+    background: rgba(58, 82, 209, 0.24);
+    border-color: rgba(108, 135, 255, 0.42);
+    color: rgba(255, 255, 255, 0.98);
+}
+
+.hero-debug-btn:active {
+    transform: translateY(1px);
+}
+
 .hero-chevron {
     position: absolute;
     bottom: calc(40px + env(safe-area-inset-bottom, 0px));
