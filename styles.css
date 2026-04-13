@@ -1489,9 +1489,28 @@ input[type="range"].calc-range::-moz-range-thumb {
     text-align: center;
 }
 
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
 .footer p {
     font-size: 0.82rem;
     color: #52525b;
+}
+
+.footer-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    transition: color var(--transition);
+}
+
+.footer-link:hover {
+    color: var(--color-text-light);
 }
 
 /* ===== Responsive ===== */
