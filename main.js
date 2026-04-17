@@ -88,6 +88,7 @@
     function productFromHash(hash) {
         if (hash === "#flow") return "flow";
         if (hash === "#erp") return "erp";
+        if (hash === "#custom") return "custom";
         if (hash === "#shift") return "shift";
         return null;
     }
@@ -337,6 +338,7 @@
         shift: document.getElementById("interestShift"),
         flow: document.getElementById("interestFlow"),
         erp: document.getElementById("interestErp"),
+        custom: document.getElementById("interestCustom"),
     };
     const productInterestSummary = document.getElementById("productInterestSummary");
 

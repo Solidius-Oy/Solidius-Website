@@ -328,7 +328,10 @@
                             aria-controls="shift"
                             data-product="shift"
                         >
-                            Solidius Shift
+                            <span class="product-switch-title">Solidius Shift</span>
+                            <span class="product-switch-meta"
+                                >Työajanseuranta ja vuorosuunnittelu</span
+                            >
                         </button>
                         <button
                             class="product-switch-btn"
@@ -339,7 +342,8 @@
                             aria-controls="flow"
                             data-product="flow"
                         >
-                            Solidius Flow
+                            <span class="product-switch-title">Solidius Flow</span>
+                            <span class="product-switch-meta">Tuotannon hienokuormitus</span>
                         </button>
                         <button
                             class="product-switch-btn"
@@ -350,7 +354,22 @@
                             aria-controls="erp"
                             data-product="erp"
                         >
-                            ERP (tulossa)
+                            <span class="product-switch-title">ERP</span>
+                            <span class="product-switch-meta">Tulossa, pilottihaku auki</span>
+                        </button>
+                        <button
+                            class="product-switch-btn"
+                            id="product-tab-custom"
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="custom"
+                            data-product="custom"
+                        >
+                            <span class="product-switch-title">Räätälöity ohjelmisto</span>
+                            <span class="product-switch-meta"
+                                >Yrityskohtaiset ohjelmistoratkaisut</span
+                            >
                         </button>
                     </div>
                 </div>
@@ -1034,6 +1053,121 @@
                 </div>
             </section>
 
+            <section
+                class="section-shift section-shift--custom product-block product-hidden"
+                id="custom"
+                role="tabpanel"
+                data-product="custom"
+                aria-hidden="true"
+            >
+                <div class="container">
+                    <div class="shift-header">
+                        <span class="section-label fade-in">Räätälöity ohjelmisto</span>
+                        <h2 class="section-title fade-in fade-in-delay-1">
+                            Ohjelmisto juuri yrityksesi tarpeisiin
+                        </h2>
+                        <p class="shift-tagline fade-in fade-in-delay-2">
+                            Kun valmis ratkaisu ei sovi, rakennetaan oikea työkalu työn ympärille
+                        </p>
+                        <p class="section-subtitle fade-in fade-in-delay-3">
+                            Toteutamme yrityksille räätälöityjä ohjelmistoja, kun tarve ei ratkea
+                            valmiilla järjestelmällä. Suunnittelemme ratkaisun liiketoiminnan,
+                            käyttäjien ja nykyisen ympäristön pohjalta, jotta ohjelmisto tukee arkea
+                            eikä lisää ylimääräisiä vaiheita. Jos mielessä on idea, keskeneräinen
+                            tarve tai prosessi, jota nykyiset työkalut eivät palvele, kerro siitä.
+                            Katsotaan yhdessä, millainen ratkaisu olisi järkevä toteuttaa.
+                        </p>
+                    </div>
+
+                    <div class="features-grid custom-features-grid">
+                        <div class="feature-card fade-in">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M3 7h18" />
+                                    <path d="M6 12h12" />
+                                    <path d="M10 17h4" />
+                                </svg>
+                            </div>
+                            <h3>Prosessin ympärille suunniteltu</h3>
+                            <p>
+                                Räätälöity ohjelmisto rakennetaan tukemaan juuri sitä työnkulkua,
+                                raportointia tai ohjausta, jota yrityksesi tarvitsee.
+                            </p>
+                        </div>
+
+                        <div class="feature-card fade-in fade-in-delay-1">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <rect x="3" y="4" width="7" height="7" rx="1" />
+                                    <rect x="14" y="4" width="7" height="7" rx="1" />
+                                    <rect x="3" y="13" width="7" height="7" rx="1" />
+                                    <path d="M14 17h7" />
+                                    <path d="M17.5 13.5v7" />
+                                </svg>
+                            </div>
+                            <h3>Sopii nykyiseen ympäristöön</h3>
+                            <p>
+                                Huomioimme olemassa olevat järjestelmät, integraatiot ja datan,
+                                jotta uusi ratkaisu istuu osaksi toimintaa eikä jää irralliseksi.
+                            </p>
+                        </div>
+
+                        <div class="feature-card fade-in fade-in-delay-2">
+                            <div class="feature-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M12 20V10" />
+                                    <path d="M18 20V4" />
+                                    <path d="M6 20v-6" />
+                                </svg>
+                            </div>
+                            <h3>Järkevä eteneminen</h3>
+                            <p>
+                                Projekti voidaan aloittaa rajatusta kokonaisuudesta ja kasvattaa
+                                vaiheittain, kun hyöty ja suunta tarkentuvat käytännössä.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="custom-teaser fade-in fade-in-delay-3">
+                        <h3>
+                            Onko teillä ohjelmistoidea, jolle ette ole löytäneet sopivaa ratkaisua?
+                        </h3>
+                        <p>
+                            Kuvaa tarve lyhyesti, niin arvioimme yhdessä, kannattaako se toteuttaa
+                            erillisenä sovelluksena, nykyisen järjestelmän laajennuksena vai
+                            kevyempänä työkaluna.
+                        </p>
+                        <a
+                            href="#yhteystiedot"
+                            class="custom-cta js-product-contact"
+                            data-interest="custom"
+                            >Kerro tarpeestasi</a
+                        >
+                    </div>
+                </div>
+            </section>
+
             <!-- Contact -->
             <section class="section-contact" id="yhteystiedot">
                 <div class="container">
@@ -1230,6 +1364,14 @@
                                             value="Solidius ERP"
                                         />
                                         <span>ERP</span>
+                                    </label>
+                                    <label class="form-product-interest-option">
+                                        <input
+                                            type="checkbox"
+                                            id="interestCustom"
+                                            value="Räätälöity ohjelmisto"
+                                        />
+                                        <span>Räätälöity ohjelmisto</span>
                                     </label>
                                     <label
                                         class="form-product-interest-option"
