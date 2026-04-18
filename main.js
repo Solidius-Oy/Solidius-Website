@@ -330,9 +330,13 @@
     const submitBtn = contactForm.querySelector("button[type='submit']");
 
     /* Nollaa checkbox sivun latautuessa (selain muistaa tilan muuten) */
-    const includeCalcInit = document.getElementById("includeCalc");
-    includeCalcInit.checked = false;
-    document.getElementById("calcAttachPreview").style.display = "none";
+    const includeCalcCheckbox = document.getElementById("includeCalc");
+    const calcAttachGroup = document.getElementById("calcAttachGroup");
+    const calcAttachPreview = document.getElementById("calcAttachPreview");
+    let shiftInterestWasSelected = false;
+
+    includeCalcCheckbox.checked = false;
+    calcAttachPreview.style.display = "none";
 
     const interestMap = {
         shift: document.getElementById("interestShift"),
@@ -341,6 +345,35 @@
         custom: document.getElementById("interestCustom"),
     };
     const productInterestSummary = document.getElementById("productInterestSummary");
+
+    function syncInterestVisualState() {
+        document.querySelectorAll(".form-product-interest-option").forEach(function (option) {
+            const input = option.querySelector('input[type="checkbox"]');
+            option.classList.toggle("is-selected", !!(input && input.checked));
+        });
+    }
+
+    function syncCalcAttachmentState() {
+        const shiftSelected = !!(interestMap.shift && interestMap.shift.checked);
+
+        if (calcAttachGroup) {
+            calcAttachGroup.hidden = !shiftSelected;
+            calcAttachGroup.setAttribute("aria-hidden", shiftSelected ? "false" : "true");
+        }
+
+        if (!shiftSelected) {
+            includeCalcCheckbox.checked = false;
+            calcAttachPreview.style.display = "none";
+        } else {
+            if (!shiftInterestWasSelected) {
+                includeCalcCheckbox.checked = true;
+            }
+            calcAttachPreview.style.display = includeCalcCheckbox.checked ? "block" : "none";
+        }
+
+        shiftInterestWasSelected = shiftSelected;
+        syncInterestVisualState();
+    }
 
     function syncInterestSummary() {
         if (!productInterestSummary) return;
@@ -357,13 +390,17 @@
         const checkbox = interestMap[productKey];
         if (!checkbox) return;
         checkbox.checked = true;
+        syncCalcAttachmentState();
         syncInterestSummary();
     }
 
     Object.keys(interestMap).forEach(function (key) {
         const checkbox = interestMap[key];
         if (!checkbox) return;
-        checkbox.addEventListener("change", syncInterestSummary);
+        checkbox.addEventListener("change", function () {
+            syncCalcAttachmentState();
+            syncInterestSummary();
+        });
     });
 
     document.querySelectorAll(".js-product-contact").forEach(function (link) {
@@ -375,22 +412,20 @@
         });
     });
 
+    syncCalcAttachmentState();
     syncInterestSummary();
 
     /* Kysy tarjous -nappi laskurissa */
     document.getElementById("calcQuoteBtn").addEventListener("click", function () {
-        const checkbox = document.getElementById("includeCalc");
-        checkbox.checked = true;
+        includeCalcCheckbox.checked = true;
         markProductInterest("shift");
-        document.getElementById("calcAttachPreview").style.display = "block";
+        syncCalcAttachmentState();
         document.getElementById("contactForm").scrollIntoView({ behavior: "smooth" });
     });
 
     /* Checkbox toggle */
-    document.getElementById("includeCalc").addEventListener("change", function () {
-        document.getElementById("calcAttachPreview").style.display = this.checked
-            ? "block"
-            : "none";
+    includeCalcCheckbox.addEventListener("change", function () {
+        syncCalcAttachmentState();
     });
 
     contactForm.addEventListener("submit", async function (e) {
@@ -449,8 +484,7 @@
         try {
             const formData = new FormData(contactForm);
             /* Liitä laskuridata vain jos checkbox on päällä */
-            const includeCalc = document.getElementById("includeCalc");
-            if (includeCalc.checked) {
+            if (includeCalcCheckbox.checked) {
                 formData.append(
                     "Laskurin_arvio",
                     document.getElementById("calcSummaryText").textContent,
@@ -469,8 +503,8 @@
                 submitBtn.textContent = "Viesti lähetetty!";
                 /* Nollaa lomake ja laskuriliitos */
                 contactForm.reset();
-                includeCalc.checked = false;
-                document.getElementById("calcAttachPreview").style.display = "none";
+                shiftInterestWasSelected = false;
+                syncCalcAttachmentState();
                 syncInterestSummary();
                 setTimeout(function () {
                     submitBtn.textContent = originalText;

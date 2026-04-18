@@ -1339,7 +1339,14 @@
                                 ></div>
                             </div>
                             <div class="form-product-interest" id="productInterestGroup">
-                                <div class="form-product-interest-label">Kiinnostuksen kohde</div>
+                                <div class="form-product-interest-head">
+                                    <div class="form-product-interest-label">
+                                        Kiinnostuksen kohde
+                                    </div>
+                                    <div class="form-product-interest-hint">
+                                        Valitse yksi tai useampi vaihtoehto
+                                    </div>
+                                </div>
                                 <div class="form-product-interest-options">
                                     <label class="form-product-interest-option">
                                         <input
@@ -1347,7 +1354,12 @@
                                             id="interestShift"
                                             value="Solidius Shift"
                                         />
-                                        <span>Shift</span>
+                                        <span class="form-product-interest-chip">
+                                            <span class="form-product-interest-chip-mark"></span>
+                                            <span class="form-product-interest-chip-text"
+                                                >Shift</span
+                                            >
+                                        </span>
                                     </label>
                                     <label class="form-product-interest-option">
                                         <input
@@ -1355,7 +1367,12 @@
                                             id="interestFlow"
                                             value="Solidius Flow"
                                         />
-                                        <span>Flow</span>
+                                        <span class="form-product-interest-chip">
+                                            <span class="form-product-interest-chip-mark"></span>
+                                            <span class="form-product-interest-chip-text"
+                                                >Flow</span
+                                            >
+                                        </span>
                                     </label>
                                     <label class="form-product-interest-option">
                                         <input
@@ -1363,7 +1380,10 @@
                                             id="interestErp"
                                             value="Solidius ERP"
                                         />
-                                        <span>ERP</span>
+                                        <span class="form-product-interest-chip">
+                                            <span class="form-product-interest-chip-mark"></span>
+                                            <span class="form-product-interest-chip-text">ERP</span>
+                                        </span>
                                     </label>
                                     <label class="form-product-interest-option">
                                         <input
@@ -1371,16 +1391,33 @@
                                             id="interestCustom"
                                             value="Räätälöity ohjelmisto"
                                         />
-                                        <span>Räätälöity ohjelmisto</span>
-                                    </label>
-                                    <label
-                                        class="form-product-interest-option"
-                                        id="calcAttachGroup"
-                                    >
-                                        <input type="checkbox" id="includeCalc" />
-                                        <span>Liitä arvio</span>
+                                        <span class="form-product-interest-chip">
+                                            <span class="form-product-interest-chip-mark"></span>
+                                            <span class="form-product-interest-chip-text"
+                                                >Räätälöity ohjelmisto</span
+                                            >
+                                        </span>
                                     </label>
                                 </div>
+                                <label
+                                    class="form-product-interest-option form-product-interest-option--calc"
+                                    id="calcAttachGroup"
+                                    hidden
+                                    aria-hidden="true"
+                                >
+                                    <input type="checkbox" id="includeCalc" />
+                                    <span class="form-product-interest-chip">
+                                        <span class="form-product-interest-chip-mark"></span>
+                                        <span class="form-product-interest-chip-content">
+                                            <span class="form-product-interest-chip-text">
+                                                Liitä Shift-laskurin arvio
+                                            </span>
+                                            <span class="form-product-interest-chip-meta">
+                                                Lisää viestiin laskurin tämänhetkinen yhteenveto
+                                            </span>
+                                        </span>
+                                    </span>
+                                </label>
                                 <div class="calc-attach-preview" id="calcAttachPreview">
                                     <span id="calcSummaryText"></span>
                                 </div>

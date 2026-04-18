@@ -1468,46 +1468,131 @@ input[type="range"].calc-range::-moz-range-thumb {
 }
 
 .form-product-interest {
-    background: var(--overlay-04);
+    background: linear-gradient(180deg, var(--overlay-04), rgba(255, 255, 255, 0.02));
     border: 1px solid var(--overlay-08);
-    border-radius: var(--radius-xs);
-    padding: 10px 12px;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.form-product-interest-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .form-product-interest-label {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 600;
     color: var(--color-text-muted);
-    margin-bottom: 8px;
+}
+
+.form-product-interest-hint {
+    font-size: 0.76rem;
+    color: rgba(148, 163, 184, 0.8);
 }
 
 .form-product-interest-options {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .form-product-interest-option {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border-radius: var(--radius-xs);
-    border: 1px solid var(--overlay-08);
-    background: rgba(255, 255, 255, 0.02);
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
+    position: relative;
+    display: block;
     cursor: pointer;
     user-select: none;
-    min-height: 32px;
 }
 
 .form-product-interest-option input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--color-accent);
-    cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.form-product-interest-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--color-text-muted);
+    transition:
+        border-color var(--transition),
+        background var(--transition),
+        color var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+.form-product-interest-chip-mark {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    background: transparent;
+    flex-shrink: 0;
+    transition:
+        border-color var(--transition),
+        background var(--transition),
+        box-shadow var(--transition);
+}
+
+.form-product-interest-chip-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.form-product-interest-chip-text {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: inherit;
+}
+
+.form-product-interest-chip-meta {
+    font-size: 0.75rem;
+    color: rgba(148, 163, 184, 0.88);
+}
+
+.form-product-interest-option:hover .form-product-interest-chip {
+    border-color: rgba(96, 165, 250, 0.24);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-light);
+    transform: translateY(-1px);
+}
+
+.form-product-interest-option.is-selected .form-product-interest-chip {
+    border-color: rgba(58, 82, 209, 0.5);
+    background: rgba(58, 82, 209, 0.14);
+    box-shadow: inset 0 0 0 1px rgba(58, 82, 209, 0.18);
+    color: var(--color-text-light);
+}
+
+.form-product-interest-option.is-selected .form-product-interest-chip-mark {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    box-shadow: 0 0 0 4px rgba(58, 82, 209, 0.16);
+}
+
+.form-product-interest-option--calc {
+    margin-top: 12px;
+}
+
+.form-product-interest-option--calc[hidden] {
+    display: none;
+}
+
+.form-product-interest-option--calc .form-product-interest-chip {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 14px;
+    padding: 12px 14px;
 }
 
 .form-submit {
@@ -1566,10 +1651,11 @@ input[type="range"].calc-range::-moz-range-thumb {
 
 .calc-attach-preview {
     display: none;
-    margin-top: 10px;
-    padding: 8px 10px;
+    margin-top: 12px;
+    padding: 10px 12px;
     background: rgba(58, 82, 209, 0.1);
     border-radius: var(--radius-xs);
+    border: 1px solid rgba(58, 82, 209, 0.18);
     font-size: 0.78rem;
     color: #a1a1aa;
     line-height: 1.5;
@@ -1739,7 +1825,13 @@ input[type="range"].calc-range::-moz-range-thumb {
     }
 
     .form-product-interest-options {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .form-product-interest-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
     }
 }
 
@@ -1791,7 +1883,16 @@ input[type="range"].calc-range::-moz-range-thumb {
     }
 
     .form-product-interest-options {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .form-product-interest-option {
+        width: 100%;
+    }
+
+    .form-product-interest-chip {
+        width: 100%;
+        border-radius: 14px;
     }
 }
 /* ===== Lightbox ===== */
